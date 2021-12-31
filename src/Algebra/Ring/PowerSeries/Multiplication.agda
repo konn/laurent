@@ -34,27 +34,25 @@ open CommRingStr (snd R) renaming
   ; ·Rdist+ to R-·Rdist+
   )
 
-infixl 8 _·ℕ→_ _·'_
-_·ℕ→_ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
-_·ℕ→_ f g 0 = f 0 ·R g 0
-_·ℕ→_ f g (suc n) = 
-  (f ·ℕ→ g ⁺) n +R (f ⁺ ·ℕ→ g) n
+infixl 8 _·'_ _·'_
+_·'_ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
+_·'_ f g 0 = f 0 ·R g 0
+_·'_ f g (suc n) = 
+  (f ·' g ⁺) n +R (f ⁺ ·' g) n
 
-_·'_ = _·ℕ→_
-
-·ℕ→-curry : ∀ f g n → (f ·ℕ→ g) (suc n) ≡ (f ·ℕ→ g ⁺ +' f ⁺ ·ℕ→ g) n
-·ℕ→-curry f g n =
-    (f ·ℕ→ g) (suc n) 
-  ≡⟨ sym (+'-compwise-n (f ·ℕ→ g ⁺) (f ⁺ ·ℕ→ g) n) ⟩ 
-    (f ·ℕ→ g ⁺ +' f ⁺ ·ℕ→ g) n
+·'-curry : ∀ f g n → (f ·' g) (suc n) ≡ (f ·' g ⁺ +' f ⁺ ·' g) n
+·'-curry f g n =
+    (f ·' g) (suc n) 
+  ≡⟨ sym (+'-compwise-n (f ·' g ⁺) (f ⁺ ·' g) n) ⟩ 
+    (f ·' g ⁺ +' f ⁺ ·' g) n
   ∎
 
-·ℕ→‿⁺ : ∀ f g → (f ·ℕ→ g)⁺ ≡ (f ·ℕ→ g ⁺ +' f ⁺ ·ℕ→ g)
-·ℕ→‿⁺ f g i n = ·ℕ→-curry f g n i
+·'‿⁺ : ∀ f g → (f ·' g)⁺ ≡ (f ·' g ⁺ +' f ⁺ ·' g)
+·'‿⁺ f g i n = ·'-curry f g n i
 
 infixl 8 _·_
 _·_ : PowerSeries → PowerSeries → PowerSeries
-_·_ = liftℕ→ROp₂ _·ℕ→_
+_·_ = liftℕ→ROp₂ _·'_
 
 +ℕ‿⁺ : ∀ f g → (f +' g)⁺ ≡ f ⁺ +' g ⁺
 +ℕ‿⁺ f g = refl
@@ -140,13 +138,13 @@ _·_ = liftℕ→ROp₂ _·ℕ→_
     f ·' h  +'  g ·' h
   ∎
 
-·'-assoc-n : ∀ f g h n → (f ·ℕ→ (g ·ℕ→ h)) n ≡ ((f ·ℕ→ g) ·ℕ→ h) n
+·'-assoc-n : ∀ f g h n → (f ·' (g ·' h)) n ≡ ((f ·' g) ·' h) n
 ·'-assoc-n f g h 0 = ·R-assoc (f 0) (g 0) (h 0)
 ·'-assoc-n f g h (suc n) = 
-  (f ·ℕ→ (g ·' h)) (suc n)
+  (f ·' (g ·' h)) (suc n)
     ≡⟨ refl ⟩
-  (f ·ℕ→ (g ·' h)⁺) n +R (f ⁺ ·' (g ·' h)) n
-    ≡⟨ cong (λ x → (f ·' x) n +R (f ⁺ ·' (g ·' h)) n) (·ℕ→‿⁺ g h) ⟩
+  (f ·' (g ·' h)⁺) n +R (f ⁺ ·' (g ·' h)) n
+    ≡⟨ cong (λ x → (f ·' x) n +R (f ⁺ ·' (g ·' h)) n) (·'‿⁺ g h) ⟩
   (f ·' ((g ·' h ⁺) +' (g ⁺ ·' h))) n +R (f ⁺ ·' (g ·' h)) n
     ≡⟨ cong (_+R (f ⁺ ·' (g ·' h)) n) 
         (·'‿+'-distrib-l-n f (g ·' h ⁺) (g ⁺ ·' h) n)
@@ -169,7 +167,7 @@ _·_ = liftℕ→ROp₂ _·ℕ→_
           ((f ·' g ⁺) ·' h  +'  (f ⁺ ·' g) ·' h) n
             ≡[ i ]⟨ ·'‿+'-distrib-r (f ·' g ⁺) (f ⁺ ·' g) h (~ i) n ⟩
           ((f ·' g ⁺  +'  f ⁺ ·' g) ·' h) n
-            ≡⟨ sym (cong (λ x → (x ·' h) n) (·ℕ→‿⁺ f g)) ⟩
+            ≡⟨ sym (cong (λ x → (x ·' h) n) (·'‿⁺ f g)) ⟩
           ((f ·' g)⁺ ·' h) n
             ∎
         )
@@ -229,7 +227,7 @@ Series⟶ℕ→R‿·' f g =
   ℕ→R⟶Series ((Series⟶ℕ→R f ·' Series⟶ℕ→R  g) ⁺)
     ≡⟨  cong ℕ→R⟶Series 
       ( (Series⟶ℕ→R f ·' Series⟶ℕ→R  g) ⁺ 
-          ≡⟨ ·ℕ→‿⁺ (Series⟶ℕ→R f) (Series⟶ℕ→R g) ⟩
+          ≡⟨ ·'‿⁺ (Series⟶ℕ→R f) (Series⟶ℕ→R g) ⟩
         Series⟶ℕ→R f ·' (Series⟶ℕ→R  g) ⁺  +'  (Series⟶ℕ→R f)⁺ ·' Series⟶ℕ→R g
           ≡⟨ refl ⟩
         Series⟶ℕ→R f ·' Series⟶ℕ→R (tail g)  +' Series⟶ℕ→R (tail f) ·' Series⟶ℕ→R g
