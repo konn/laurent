@@ -16,9 +16,12 @@ open import Cubical.Data.Nat
 open PowerSeries
 
 open CommRingStr (snd R) renaming 
-  ( _·_ to _·R_ ; _+_ to _+R_; 1r to 1R; 0r to 0R
+  ( _·_ to _·R_ ; _+_ to _+R_; -_ to -R_; 1r to 1R; 0r to 0R
+  ; _-_ to _-R_
   ; +Assoc to +R-assoc
+  ; +Comm to +R-comm
   ; +Identity to +R-identity
+  ; +Inv to +R-inverse
   ; ·Assoc to ·R-assoc
   ; ·Identity to ·R-identity
   ; is-set to R-isSet
@@ -66,3 +69,32 @@ tail (+-identityˡ x i) = +-identityˡ (tail x) i
 
 +-isMonoid : IsMonoid 0s _+_
 +-isMonoid = ismonoid +-isSemigroup +-identity
+
+infix  8 -_
+
+-_ : PowerSeries → PowerSeries
+head (- f) = -R (head f)
+tail (- f) = - (tail f)
+
++-inverseˡ : ∀ x → (- x) + x ≡ 0s
+head (+-inverseˡ x i) = snd (+R-inverse (head x)) i
+tail (+-inverseˡ x i) = +-inverseˡ (tail x) i
+
++-inverseʳ : ∀ x → x + (- x) ≡ 0s
+head (+-inverseʳ x i) = fst (+R-inverse (head x)) i
+tail (+-inverseʳ x i) = +-inverseʳ (tail x) i
+
++-inverse : ∀  x → (x + (- x) ≡ 0s) × ((- x) + x ≡ 0s)
++-inverse x = (+-inverseʳ x , +-inverseˡ x)
+
++-isGroup : IsGroup 0s _+_ -_
++-isGroup =
+  isgroup +-isMonoid +-inverse
+
++-comm : ∀ f g → f + g ≡ g + f
+head (+-comm f g i) = +R-comm (head f) (head g) i
+tail (+-comm f g i) = +-comm (tail f) (tail g) i
+
++-isAbGroup : IsAbGroup 0s _+_ -_
++-isAbGroup = isabgroup +-isGroup +-comm
+ 

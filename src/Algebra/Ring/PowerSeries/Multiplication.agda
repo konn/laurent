@@ -1,10 +1,12 @@
 {-# OPTIONS --guardedness --cubical #-}
 open import Cubical.Algebra.CommRing
 module Algebra.Ring.PowerSeries.Multiplication {ℓ} (R : CommRing ℓ) where
+open import Cubical.Algebra.Ring
 open import Algebra.Ring.PowerSeries.Base R
 open import Algebra.Ring.PowerSeries.Addition R
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.SIP
 open import Cubical.Algebra.Semigroup
 open import Cubical.Algebra.Monoid
@@ -16,11 +18,12 @@ open import Cubical.Algebra.Ring.Properties
 open import Cubical.Data.Nat
   using ( ℕ ; suc )
   renaming (_+_ to _+ℕ_; _·_ to _·ℕ_)
-
+open import Lemmas.IsoEquiv
 open PowerSeries
 
 open CommRingStr (snd R) renaming 
   ( _·_ to _·R_ ; _+_ to _+R_; 1r to 1R; 0r to 0R
+  ; _-_ to _-R_; -_ to -R_
   ; +Assoc to +R-assoc
   ; +Identity to +R-identity
   ; +Comm to +R-comm
@@ -189,7 +192,11 @@ _+'_ = _+ℕ→_
 ·'-assoc f g h i n = ·'-assoc-n f g h n i
 
 1s' : ℕ → ⟨ R ⟩
-1s' = transport Series≡ℕ→R 1s
+1s' 0 = 1R
+1s' (suc n) = 0R
+
+0s' : ℕ → ⟨ R ⟩
+0s' n = 0R
 
 open RingTheory (CommRing→Ring R) 
   renaming
@@ -209,3 +216,214 @@ open RingTheory (CommRing→Ring R)
     ≡⟨ refl ⟩
   head f ·R head g
     ∎
+
+Series⟶ℕ→R‿·' : 
+  ∀ f g → Series⟶ℕ→R f ·' Series⟶ℕ→R g ≡ Series⟶ℕ→R (f · g)
+Series⟶ℕ→R‿·' f g = 
+  Series⟶ℕ→R f ·' Series⟶ℕ→R g 
+    ≡⟨ sym (Ser-Nat-sect (Series⟶ℕ→R f ·' Series⟶ℕ→R g)) ⟩
+  Series⟶ℕ→R (ℕ→R⟶Series (Series⟶ℕ→R f ·' Series⟶ℕ→R g))
+    ≡⟨ cong Series⟶ℕ→R (sym (liftℕ→ROp₂-unfold _·'_ f g)) ⟩
+  Series⟶ℕ→R (f · g)
+    ∎
+
+·-tail : ∀ f g → tail (f · g) ≡ f · tail g + tail f · g
+·-tail f g =
+  tail (f · g) 
+    ≡⟨ cong tail (liftℕ→ROp₂-unfold _·'_ f g ) ⟩
+  tail (ℕ→R⟶Series (Series⟶ℕ→R f ·' Series⟶ℕ→R  g))
+    ≡⟨ refl ⟩
+  ℕ→R⟶Series ((Series⟶ℕ→R f ·' Series⟶ℕ→R  g) ⁺)
+    ≡⟨  cong ℕ→R⟶Series 
+      ( (Series⟶ℕ→R f ·' Series⟶ℕ→R  g) ⁺ 
+          ≡⟨ ·ℕ→‿⁺ (Series⟶ℕ→R f) (Series⟶ℕ→R g) ⟩
+        Series⟶ℕ→R f ·' (Series⟶ℕ→R  g) ⁺  +'  (Series⟶ℕ→R f)⁺ ·' Series⟶ℕ→R g
+          ≡⟨ refl ⟩
+        Series⟶ℕ→R f ·' Series⟶ℕ→R (tail g)  +' Series⟶ℕ→R (tail f) ·' Series⟶ℕ→R g
+          ≡⟨ cong₂ _+'_ 
+              (Series⟶ℕ→R‿·' f (tail g)) 
+              (Series⟶ℕ→R‿·' (tail f) g)
+          ⟩
+        Series⟶ℕ→R (f · tail g) +' Series⟶ℕ→R (tail f · g)
+          ∎
+      )
+    ⟩
+  ℕ→R⟶Series (Series⟶ℕ→R (f · tail g) +' Series⟶ℕ→R (tail f · g))
+    ≡⟨ sym (liftℕ→ROp₂-unfold _+'_ (f · tail g) (tail f · g)) ⟩
+  liftℕ→ROp₂ _+'_ (f · tail g) (tail f · g)
+    ≡⟨ refl ⟩
+  liftℕ→ROp₂ (liftSeriesOp₂ _+_) (f · tail g) (tail f · g)
+    ≡⟨ cong (λ p → p (f · tail g) (tail f · g)) 
+        (transport⁻Transport 
+          (λ i → Series≡ℕ→R i → Series≡ℕ→R i → Series≡ℕ→R i) 
+          _+_
+        )
+    ⟩
+  f · tail g + tail f · g
+    ∎
+
+·-unfold : ∀ f g → f · g ≡ (head f ·R head g) ∷ (f · tail g + tail f · g)
+head (·-unfold f g i) = ·-head f g i
+tail (·-unfold f g i) = ·-tail f g i
+
+0s'≡0s : 0s' ≡ Series⟶ℕ→R 0s
+0s'≡0s i 0 = 0R
+0s'≡0s i (suc n) = 0s'≡0s i n
+
+1s'≡1s : 1s' ≡ Series⟶ℕ→R 1s
+1s'≡1s i 0 = 1R
+1s'≡1s i (suc n) = 0s'≡0s i n
+
+0s'-absorbL-n : ∀ f n → (0s' ·' f) n ≡ 0s' n
+0s'-absorbL-n f 0 = 
+  (0s' ·' f) 0
+    ≡⟨ 0R-absorb-l (f 0) ⟩
+  0R
+    ∎
+0s'-absorbL-n f (suc n) = 
+  (0s' ·' f) (suc n) 
+    ≡⟨ refl ⟩
+  (0s' ·' f ⁺) n  +R  (0s' ·' f) n
+    ≡⟨ cong₂ _+R_ 
+        (0s'-absorbL-n (f ⁺) n)
+        (0s'-absorbL-n f n)
+    ⟩
+  0R +R 0R
+    ≡⟨ fst (+R-identity 0R) ⟩
+  0R
+    ≡⟨ refl ⟩
+  0s' (suc n)
+    ∎
+
+0s'-absorbL : ∀ f → 0s' ·' f ≡ 0s'
+0s'-absorbL f i n = 0s'-absorbL-n f n i
+
+0s'-absorbR : ∀ f → f ·' 0s' ≡ 0s'
+0s'-absorbR f = ·'-comm f 0s' ∙ 0s'-absorbL f
+
+·'-identityˡ-n : ∀ f n → (1s' ·' f) n ≡ f n
+·'-identityˡ-n f 0 = snd (·R-identity (f 0))
+·'-identityˡ-n f (suc n) = 
+  (1s' ·' f) (suc n) 
+    ≡⟨ refl ⟩
+  (1s' ·' (f ⁺)) n  +R  (0s' ·' f) n
+    ≡⟨ cong₂ _+R_ (·'-identityˡ-n (f ⁺) n) (0s'-absorbL-n f n)  ⟩
+  f (suc n) +R  0R
+    ≡⟨ fst (+R-identity (f (suc n))) ⟩
+  f (suc n)
+    ∎
+
+·'-identityˡ : ∀ f → 1s' ·' f ≡ f
+·'-identityˡ f i n = ·'-identityˡ-n f n i
+
+·'-identityʳ : ∀ f → f ·' 1s' ≡ f
+·'-identityʳ f = ·'-comm f 1s' ∙ ·'-identityˡ f
+
+mulp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _·'_ _·_
+mulp i = 
+  transp (λ j → Series≡ℕ→R (~ i ∨ ~ j) → Series≡ℕ→R (~ i ∨ ~ j) → Series≡ℕ→R (~ i ∨ ~ j)) (~ i) _·'_
+
+·-assoc : ∀ x y z → x · (y · z) ≡ (x · y) · z
+·-assoc = 
+  transport 
+    (λ i → (x y z : Series≡ℕ→R (~ i)) → 
+      mulp i x (mulp i y z) ≡ mulp i (mulp i x y) z
+    )
+    ·'-assoc
+
+onepInvAux : PathP (λ i → Series≡ℕ→R i) 1s (transport Series≡ℕ→R  1s)
+onepInvAux = transport-filler Series≡ℕ→R 1s
+
+onepInv : PathP (λ i → Series≡ℕ→R i) 1s 1s'
+onepInv = subst (PathP (λ i → Series≡ℕ→R i) 1s) 
+  (  
+  transport Series≡ℕ→R 1s
+    ≡[ i ]⟨ transport-isoToPath Series≃ℕ→R i  1s  ⟩
+  Series⟶ℕ→R 1s
+    ≡⟨ sym 1s'≡1s ⟩
+  1s'
+    ∎
+  )
+  onepInvAux
+
+onep : PathP (λ i → Series≡ℕ→R (~ i)) 1s' 1s
+onep i = onepInv (~ i)
+
+·-IsSemigroup : IsSemigroup _·_
+·-IsSemigroup = issemigroup PowerSeries-isSet ·-assoc
+
+·-identityʳ : ∀ x → x · 1s ≡ x
+·-identityʳ = 
+  transport 
+    (λ i → (x : Series≡ℕ→R (~ i)) → 
+      let 1sᵢ = onep i
+          _·ᵢ_ = mulp i
+      in x ·ᵢ 1sᵢ ≡ x
+    )
+    ·'-identityʳ
+
+·-identityˡ : ∀ x → 1s · x ≡ x
+·-identityˡ = 
+  transport 
+    (λ i → (x : Series≡ℕ→R (~ i)) → 
+      let 1sᵢ = onep i
+          _·ᵢ_ = mulp i
+      in 1sᵢ ·ᵢ x ≡ x
+    )
+    ·'-identityˡ
+
+·-identity : ∀ x → (x · 1s ≡ x) × (1s · x ≡ x)
+·-identity x = (·-identityʳ x , ·-identityˡ x)
+
+·-IsMonoid : IsMonoid 1s _·_
+·-IsMonoid = ismonoid ·-IsSemigroup ·-identity
+
+·-comm : ∀ x y → x · y ≡ y · x
+·-comm = 
+  transport 
+    (λ i → (x y : Series≡ℕ→R (~ i)) → 
+      let _·ᵢ_ = mulp i
+      in x ·ᵢ y ≡ y ·ᵢ x
+    )
+    ·'-comm
+
+addp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _+'_ _+_
+addp i = transport-filler 
+  (λ i → Series≡ℕ→R i → Series≡ℕ→R i → Series≡ℕ→R i) 
+  _+_ (~ i)
+
+distˡ : ∀ x y z → x · (y + z) ≡ x · y  +  x · z
+distˡ =
+  transport
+    (λ i → (x y z : Series≡ℕ→R (~ i)) → 
+      let _·ᵢ_ = mulp i
+          _+ᵢ_ = addp i
+      in x ·ᵢ (y +ᵢ z) ≡ (x ·ᵢ y) +ᵢ (x ·ᵢ z)
+    )
+    ·'‿+'-distrib-l
+
+distʳ : ∀ x y z → (x + y) · z ≡ x · z  +  y · z
+distʳ =
+  transport
+    (λ i → (x y z : Series≡ℕ→R (~ i)) → 
+      let _·ᵢ_ = mulp i
+          _+ᵢ_ = addp i
+      in (x +ᵢ y) ·ᵢ z ≡ (x ·ᵢ z)  +ᵢ  (y ·ᵢ z)
+    )
+    ·'‿+'-distrib-r
+
++-·-distrib : ∀ x y z → 
+  (x · (y + z) ≡ x · y  +  x · z) × ((x + y) · z ≡ x · z  +  y · z)
++-·-distrib x y z = (distˡ x y z , distʳ x y z)
+
+Series-IsRing : IsRing 0s 1s  _+_ _·_ -_
+Series-IsRing = isring +-isAbGroup ·-IsMonoid +-·-distrib
+
+Series-IsCommRing : IsCommRing 0s 1s _+_ _·_ -_
+Series-IsCommRing = iscommring Series-IsRing ·-comm
+
+Series-CommRingStr : CommRingStr PowerSeries
+Series-CommRingStr = commringstr 0s 1s _+_ _·_ -_ Series-IsCommRing
+
+Series-CommRing : CommRing _
+Series-CommRing = (_ , Series-CommRingStr)
