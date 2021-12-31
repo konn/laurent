@@ -98,3 +98,13 @@ tail-to-⁺ f = refl
 ⁺-to-tail : ∀ f → (Series⟶ℕ→R f) ⁺ ≡ Series⟶ℕ→R (tail f)
 ⁺-to-tail f = refl
 
+module Variables where
+  X : PowerSeries
+  head X = 0R
+  head (tail X) = 1R
+  tail (tail X) = 0s
+
+  infix 9 X^_
+  X^_ : ℕ → PowerSeries
+  X^ 0 = 1s
+  X^ suc n = 0R ∷ X^ n
