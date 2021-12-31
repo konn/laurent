@@ -32,22 +32,22 @@ _+_ : PowerSeries → PowerSeries → PowerSeries
 head (l + r) = head l +R head r
 tail (l + r) = tail l + tail r
 
-infixl 7 _+ℕ→_
-_+ℕ→_ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
-_+ℕ→_ = liftSeriesOp₂ _+_
+infixl 7 _+'_
+_+'_ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
+_+'_ = liftSeriesOp₂ _+_
 
-+ℕ→-compwise-n : ∀ f g n → (f +ℕ→ g) n ≡ f n +R g n
-+ℕ→-compwise-n f g 0 =  
-    (f +ℕ→ g) 0
++'-compwise-n : ∀ f g n → (f +' g) n ≡ f n +R g n
++'-compwise-n f g 0 =  
+    (f +' g) 0
   ≡[ i ]⟨ liftSeriesOp₂-unfold _+_ f g i 0 ⟩
     Series⟶ℕ→R (ℕ→R⟶Series f + ℕ→R⟶Series g) 0
   ≡⟨ refl ⟩
     f 0 +R g 0
   ∎
-+ℕ→-compwise-n f g (suc n) = +ℕ→-compwise-n (λ n → f (suc n)) (λ n → g (suc n)) n
++'-compwise-n f g (suc n) = +'-compwise-n (λ n → f (suc n)) (λ n → g (suc n)) n
 
-+ℕ→-compwise : ∀ f g → (f +ℕ→ g) ≡ (λ n → f n +R g n)
-+ℕ→-compwise f g i n = +ℕ→-compwise-n f g n i
++'-compwise : ∀ f g → (f +' g) ≡ (λ n → f n +R g n)
++'-compwise f g i n = +'-compwise-n f g n i
 
 +-assoc : ∀ x y z → x + (y + z) ≡ (x + y) + z
 head (+-assoc x y z i) = +R-assoc (head x) (head y) (head z) i
@@ -97,4 +97,9 @@ tail (+-comm f g i) = +-comm (tail f) (tail g) i
 
 +-isAbGroup : IsAbGroup 0s _+_ -_
 +-isAbGroup = isabgroup +-isGroup +-comm
- 
+
+
+addp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _+'_ _+_
+addp i = transport-filler 
+  (λ i → Series≡ℕ→R i → Series≡ℕ→R i → Series≡ℕ→R i) 
+  _+_ (~ i)

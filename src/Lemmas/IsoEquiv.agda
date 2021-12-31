@@ -10,7 +10,8 @@ open import Cubical.Foundations.Univalence
 
 private
   variable
-    ℓ ℓ' : Level
+    c ℓ ℓ' : Level
+    C : Type c
     A : Type ℓ
     B : Type ℓ'
 
@@ -79,6 +80,29 @@ transportIsoToPathOp₂ σ f x y =
         (λ i →  invEqIsoToEquiv σ i y)
     ⟩
     Iso.fun σ (f (Iso.inv σ x) (Iso.inv σ y))
+  ∎
+
+transportUAop₁-over : ∀ (e : A ≃ B) (f : C → A → A) 
+  (x : C) (y : B)
+  → transport (λ i → C → ua e i → ua e i) f x y ≡
+    equivFun e (f x (invEq e y))
+transportUAop₁-over e f x y i =
+    transportRefl (equivFun e (f (transportRefl x i) (invEq e (transportRefl y i)))) i
+
+transportIsoToPathOp₁-over :
+  ∀(σ : Iso A B) {C : Type c} (f : C → A → A) (x : C) (y : B)
+  → transport (λ i → C → isoToPath σ i → isoToPath σ i) f x y
+    ≡ Iso.fun σ (f x (Iso.inv σ y))
+transportIsoToPathOp₁-over σ {C} f c y =
+    transport (λ i → C → isoToPath σ i → isoToPath σ i) f c y
+  ≡⟨ refl ⟩
+    transport (λ i → C → ua (isoToEquiv σ) i → ua (isoToEquiv σ) i) f c y
+  ≡⟨ transportUAop₁-over (isoToEquiv σ) f c y ⟩
+    Iso.fun σ (f c (invEq (isoToEquiv σ) y))
+  ≡⟨ cong (λ l → Iso.fun σ (f c l)) 
+        (λ i →  invEqIsoToEquiv σ i y)
+    ⟩
+    Iso.fun σ (f c (Iso.inv σ y))
   ∎
 
 transport⁻IsoToPathOp₂ :

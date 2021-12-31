@@ -88,3 +88,13 @@ liftSeriesOp₂-unfold :
   → liftSeriesOp₂ f x y ≡ Series⟶ℕ→R (f (ℕ→R⟶Series x) (ℕ→R⟶Series y))
 liftSeriesOp₂-unfold = transportIsoToPathOp₂ Series≃ℕ→R
 
+infixl 10 _⁺
+_⁺ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
+(f ⁺) n = f (suc n)
+
+tail-to-⁺ : ∀ f → tail (ℕ→R⟶Series f) ≡ ℕ→R⟶Series (f ⁺)
+tail-to-⁺ f = refl
+
+⁺-to-tail : ∀ f → (Series⟶ℕ→R f) ⁺ ≡ Series⟶ℕ→R (tail f)
+⁺-to-tail f = refl
+

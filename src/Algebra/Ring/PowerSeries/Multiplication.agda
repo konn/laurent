@@ -34,10 +34,6 @@ open CommRingStr (snd R) renaming
   ; ·Rdist+ to R-·Rdist+
   )
 
-infixl 10 _⁺
-_⁺ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
-(f ⁺) n = f (suc n)
-
 infixl 8 _·ℕ→_ _·'_
 _·ℕ→_ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
 _·ℕ→_ f g 0 = f 0 ·R g 0
@@ -46,22 +42,19 @@ _·ℕ→_ f g (suc n) =
 
 _·'_ = _·ℕ→_
 
-·ℕ→-curry : ∀ f g n → (f ·ℕ→ g) (suc n) ≡ (f ·ℕ→ g ⁺ +ℕ→ f ⁺ ·ℕ→ g) n
+·ℕ→-curry : ∀ f g n → (f ·ℕ→ g) (suc n) ≡ (f ·ℕ→ g ⁺ +' f ⁺ ·ℕ→ g) n
 ·ℕ→-curry f g n =
     (f ·ℕ→ g) (suc n) 
-  ≡⟨ sym (+ℕ→-compwise-n (f ·ℕ→ g ⁺) (f ⁺ ·ℕ→ g) n) ⟩ 
-    (f ·ℕ→ g ⁺ +ℕ→ f ⁺ ·ℕ→ g) n
+  ≡⟨ sym (+'-compwise-n (f ·ℕ→ g ⁺) (f ⁺ ·ℕ→ g) n) ⟩ 
+    (f ·ℕ→ g ⁺ +' f ⁺ ·ℕ→ g) n
   ∎
 
-·ℕ→‿⁺ : ∀ f g → (f ·ℕ→ g)⁺ ≡ (f ·ℕ→ g ⁺ +ℕ→ f ⁺ ·ℕ→ g)
+·ℕ→‿⁺ : ∀ f g → (f ·ℕ→ g)⁺ ≡ (f ·ℕ→ g ⁺ +' f ⁺ ·ℕ→ g)
 ·ℕ→‿⁺ f g i n = ·ℕ→-curry f g n i
 
 infixl 8 _·_
 _·_ : PowerSeries → PowerSeries → PowerSeries
 _·_ = liftℕ→ROp₂ _·ℕ→_
-
-infixl 7 _+'_
-_+'_ = _+ℕ→_
 
 +ℕ‿⁺ : ∀ f g → (f +' g)⁺ ≡ f ⁺ +' g ⁺
 +ℕ‿⁺ f g = refl
@@ -96,13 +89,13 @@ _+'_ = _+ℕ→_
   (f ·' (g +' h)) 0
     ≡⟨ refl ⟩
   f 0 ·R ((g +' h) 0) 
-    ≡⟨ cong (f 0 ·R_) (+ℕ→-compwise-n g h 0) ⟩
+    ≡⟨ cong (f 0 ·R_) (+'-compwise-n g h 0) ⟩
   f 0 ·R (g 0 +R h 0) 
     ≡⟨ R-·Rdist+ (f 0) (g 0) (h 0) ⟩
   f 0 ·R g 0 +R f 0 ·R h 0
     ≡⟨ refl ⟩ 
   (f ·' g) 0 +R (f ·' h) 0
-    ≡⟨ sym (+ℕ→-compwise-n (f ·' g ) (f ·' h) 0) ⟩ 
+    ≡⟨ sym (+'-compwise-n (f ·' g ) (f ·' h) 0) ⟩ 
   (f ·' g  +'  f ·' h) 0
     ∎
 ·'‿+'-distrib-l-n f g h (suc n) = 
@@ -117,15 +110,15 @@ _+'_ = _+ℕ→_
     ⟩
   (f ·' g ⁺ +' f ·' h ⁺) n  +R  (f ⁺ ·' g +' f ⁺ ·' h) n
     ≡⟨ cong₂ _+R_ 
-        (+ℕ→-compwise-n (f ·' g ⁺) (f ·' h ⁺) n)
-        (+ℕ→-compwise-n (f ⁺ ·' g) (f ⁺ ·' h) n)
+        (+'-compwise-n (f ·' g ⁺) (f ·' h ⁺) n)
+        (+'-compwise-n (f ⁺ ·' g) (f ⁺ ·' h) n)
       ⟩
   ((f ·' g ⁺) n +R (f ·' h ⁺) n)  +R  ((f ⁺ ·' g) n +R (f ⁺ ·' h) n)
     ≡⟨ lem1 ((f ·' g ⁺) n) ((f ·' h ⁺) n) ((f ⁺ ·' g) n) ((f ⁺ ·' h) n) ⟩
   ((f ·' g ⁺) n +R (f ⁺ ·' g) n)  +R  ((f ·' h ⁺) n +R (f ⁺ ·' h) n)
     ≡⟨ refl ⟩
   (f ·' g) (suc n)  +R  (f ·' h) (suc n)
-    ≡⟨ sym (+ℕ→-compwise-n (f ·' g) (f ·' h) (suc n)) ⟩
+    ≡⟨ sym (+'-compwise-n (f ·' g) (f ·' h) (suc n)) ⟩
   (f ·' g  +'  f ·' h) (suc n)
     ∎
   where
@@ -160,7 +153,7 @@ _+'_ = _+ℕ→_
     ⟩
   (f ·' (g ·' h ⁺) +' f ·' (g ⁺ ·' h)) n +R (f ⁺ ·' (g ·' h)) n
     ≡⟨ cong (_+R (f ⁺ ·' (g ·' h)) n)  
-        (+ℕ→-compwise-n (f ·' (g ·' h ⁺)) (f ·' (g ⁺ ·' h)) n)
+        (+'-compwise-n (f ·' (g ·' h ⁺)) (f ·' (g ⁺ ·' h)) n)
     ⟩
   (f ·' (g ·' h ⁺)) n +R (f ·' (g ⁺ ·' h)) n +R (f ⁺ ·' (g ·' h)) n
     ≡⟨ sym (+R-assoc ((f ·' (g ·' h ⁺)) n) ((f ·' (g ⁺ ·' h)) n) ((f ⁺ ·' (g ·' h)) n)) ⟩
@@ -172,7 +165,7 @@ _+'_ = _+ℕ→_
                 (·'-assoc-n (f ⁺) g h n)
               ⟩
           ((f ·' g ⁺) ·' h) n  +R ((f ⁺ ·' g) ·' h) n
-            ≡⟨ sym (+ℕ→-compwise-n ((f ·' g ⁺) ·' h) ((f ⁺ ·' g) ·' h) n) ⟩
+            ≡⟨ sym (+'-compwise-n ((f ·' g ⁺) ·' h) ((f ⁺ ·' g) ·' h) n) ⟩
           ((f ·' g ⁺) ·' h  +'  (f ⁺ ·' g) ·' h) n
             ≡[ i ]⟨ ·'‿+'-distrib-r (f ·' g ⁺) (f ⁺ ·' g) h (~ i) n ⟩
           ((f ·' g ⁺  +'  f ⁺ ·' g) ·' h) n
@@ -386,11 +379,6 @@ onep i = onepInv (~ i)
       in x ·ᵢ y ≡ y ·ᵢ x
     )
     ·'-comm
-
-addp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _+'_ _+_
-addp i = transport-filler 
-  (λ i → Series≡ℕ→R i → Series≡ℕ→R i → Series≡ℕ→R i) 
-  _+_ (~ i)
 
 distˡ : ∀ x y z → x · (y + z) ≡ x · y  +  x · z
 distˡ =
