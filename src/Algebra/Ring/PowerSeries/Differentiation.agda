@@ -22,12 +22,14 @@ open CommRingStr (snd R) renaming
   ; _-_ to _-R_
   ; +Assoc to +R-assoc
   ; +Comm to +R-comm
+  ; ·-comm to ·R-comm
   ; +Identity to +R-identity
   ; +Inv to +R-inverse
   ; ·Assoc to ·R-assoc
   ; ·Identity to ·R-identity
   ; is-set to R-isSet
   ; ·Rdist+ to R-·Rdist+
+  ; ·Ldist+ to R-·Ldist+
   )
 
 -- | A formal differentiation of formal power series
@@ -126,33 +128,137 @@ diff'-⁺-n f n =
 diff'-⁺ : ∀ f → (diff' f) ⁺ ≡ f ⁺ ⁺ +' diff' (f ⁺)
 diff'-⁺ f i n = diff'-⁺-n f n i
 
+diff'0≡⁺0 : ∀ f → diff' f 0 ≡ (f ⁺) 0
+diff'0≡⁺0 f = snd (·R-identity (f 1))
+
+open Variables
+
+⁺′-+-′⁺ : ∀ f g n → (f ⁺ ·' diff' g) n +R (g ⁺ ·' diff' f) n 
+  ≡ fromNat (suc (suc n)) ·R (f ⁺ ·' g ⁺) n
+⁺′-+-′⁺ f g 0 =
+  (f ⁺ ·' diff' g) 0 +R (g ⁺ ·' diff' f) 0
+    ≡⟨ refl ⟩
+  f 1 ·R (1R ·R g 1) +R g 1 ·R (1R ·R f 1)
+    ≡⟨ cong₂ _+R_
+        ( f 1 ·R (1R ·R g 1)
+            ≡⟨ ·R-assoc (f 1) 1R (g 1) ⟩
+          (f 1 ·R 1R) ·R g 1
+            ≡⟨ cong (_·R g 1) (·R-comm (f 1) 1R) ⟩
+          (1R ·R f 1) ·R g 1
+            ≡⟨ sym (·R-assoc 1R (f 1) (g 1)) ⟩
+          1R ·R (f 1 ·R g 1)
+            ∎
+        )
+        ( g 1 ·R (1R ·R f 1)
+            ≡⟨ ·R-comm (g 1) (1R ·R f 1) ⟩
+          1R ·R f 1 ·R g 1
+            ≡⟨ sym (·R-assoc 1R (f 1) (g 1)) ⟩
+          1R ·R (f 1 ·R g 1)
+            ∎
+        )
+    ⟩
+  1R ·R (f 1 ·R g 1) +R 1R ·R (f 1 ·R g 1)
+    ≡⟨ sym (R-·Ldist+ 1R 1R (f 1 ·R g 1)) ⟩
+  fromNat 2 ·R (f ⁺ ·' g ⁺) 0
+    ∎
+⁺′-+-′⁺ f g (suc n) = {!   !}
+
+private
+  R-distr3-L : ∀ r x y z → r ·R (x +R y +R z) ≡ r ·R x +R r ·R y +R r ·R z
+  R-distr3-L = solve R
+
 leibniz'-n : ∀ f g n → diff' (f ·' g) n ≡ (f ·' diff' g  +'  diff' f ·' g) n
 leibniz'-n f g 0 =
   diff' (f ·' g) 0
-    ≡⟨ diff'-0 (f ·' g) ⟩
+    ≡⟨ refl ⟩
+  1R ·R (f ·' g) 1
+    ≡⟨ snd (·R-identity ((f ·' g) 1)) ⟩
   (f ·' g) 1
     ≡⟨ refl ⟩
-  f 0 ·R g 1  +R  f 1 ·R g 0
-    ≡⟨ cong₂ _+R_ 
-        (cong (f 0 ·R_) (sym (diff'-0 g)))
-        (cong (_·R g 0) (sym (diff'-0 f)))
+  f 0 ·R g 1 +R f 1 ·R g 0
+    ≡⟨ cong₂ 
+      _+R_
+      (cong (f 0 ·R_) (sym (snd (·R-identity (g 1)))))
+      (cong (_·R g 0) (sym (snd (·R-identity (f 1)))))
     ⟩
-  f 0 ·R diff' g 0  +R  diff' f 0 ·R g 0
+  f 0 ·R (1R ·R g 1)  +R  (1R ·R f 1) ·R g 0
     ≡⟨ refl ⟩
   (f ·' diff' g) 0  +R  (diff' f ·' g) 0
     ≡⟨ sym (+'-compwise-n (f ·' diff' g) (diff' f ·' g) 0) ⟩
   (f ·' diff' g  +'  diff' f ·' g) 0
-    ∎ 
-leibniz'-n f g (suc n) = 
-  diff' (f ·' g) (suc n)
-    ≡⟨ refl ⟩
-  fromNat (suc (suc n)) ·R (f ·' g) (suc (suc n))
-    ≡⟨ {!   !} ⟩
-  (f ·' g) (suc (suc n)) 
-    +R fromNat (suc n) ·R (f ·' g) (suc (suc n))
-    ≡⟨ {!   !} ⟩
-  ((f ·' (diff' g)⁺) n  +R  (f ⁺ ·' diff' g) n)
-    +R  ((diff' f ·' g ⁺) n  +R  ((diff' f) ⁺ ·' g) n)
-    ≡⟨ sym (+'-compwise-n (f ·' diff' g) (diff' f ·' g) (suc n)) ⟩
-  (f ·' diff' g  +'  diff' f ·' g) (suc n)
     ∎
+leibniz'-n f g (suc n) = [fg]′⇒nf ∙ sym fg′+f′g⇒nf
+  where
+    n+2 = fromNat (suc (suc n))
+    theGoal = 
+          f 0 ·R (diff' g (suc n)) 
+      +R  g 0 ·R (diff' f (suc n))
+      +R  fromNat (suc (suc n)) ·R (f ⁺ ·' g ⁺) n
+    fg′+f′g⇒nf : (f ·' diff' g +' diff' f ·' g) (suc n) ≡ theGoal
+    fg′+f′g⇒nf =
+      {!   !}
+    [fg]′⇒nf : diff' (f ·' g) (suc n) ≡ theGoal
+    [fg]′⇒nf = 
+      diff' (f ·' g) (suc n)
+        ≡⟨ refl ⟩
+      n+2 ·R ((f ·' g) ⁺) (suc n)
+        ≡⟨ cong (λ x → n+2 ·R x (suc n)) (·'‿⁺-unfold f g) ⟩
+      n+2 ·R (f 0 ⋆' g ⁺ +' (f ⁺ ·' g ⁺) ·' X' +' g 0 ⋆' f ⁺) (suc n)
+        ≡⟨ cong (n+2 ·R_) 
+            (+'-+'-+'-compwise
+                (f 0 ⋆' g ⁺)
+                ((f ⁺ ·' g ⁺) ·' X')
+                (g 0 ⋆' f ⁺)
+                (suc n)
+              )
+        ⟩
+      n+2 ·R 
+        ( (f 0 ⋆' g ⁺) (suc n) 
+          +R ((f ⁺ ·' g ⁺) ·' X') (suc n) 
+          +R (g 0 ⋆' f ⁺)  (suc n)
+        )
+        ≡⟨ R-distr3-L n+2 
+            ((f 0 ⋆' g ⁺) (suc n)) 
+            (((f ⁺ ·' g ⁺) ·' X') (suc n) )
+            ((g 0 ⋆' f ⁺)  (suc n))
+        ⟩
+      n+2 ·R (f 0 ·R g (suc (suc n))) 
+        +R n+2 ·R ((f ⁺ ·' g ⁺) ·' X') (suc n) 
+        +R n+2 ·R (g 0 ·R f (suc (suc n)))
+        ≡⟨( let lem0 : ∀ x y z → x ·R (y ·R z) ≡ y ·R (x ·R z)
+                lem0 = solve R
+             in cong₂ _+R_ 
+              (cong₂ _+R_ 
+                (lem0 n+2 (f 0) (g (suc (suc n))))
+                (cong (n+2 ·R_) (X'-shift-n (f ⁺ ·' g ⁺) n))
+              )
+              (lem0 n+2 (g 0) (f (suc (suc n))))
+        )⟩
+      f 0 ·R (diff' g (suc n))
+        +R n+2 ·R (f ⁺ ·' g ⁺) n
+        +R g 0 ·R (diff' f (suc n))
+        ≡⟨( let lem0 : ∀ x y z → x +R y +R z ≡ x +R z +R y
+                lem0 = solve R
+             in lem0
+                  (f 0 ·R (diff' g (suc n)))
+                  (n+2 ·R ((f ⁺ ·' g ⁺)  n))
+                  (g 0 ·R (diff' f (suc n)))
+          )
+        ⟩
+          f 0 ·R (diff' g (suc n))
+      +R  g 0 ·R (diff' f (suc n))
+      +R  n+2 ·R (f ⁺ ·' g ⁺) n
+        ∎
+
+leibniz' : ∀ f g → diff' (f ·' g) ≡ f ·' diff' g  +'  diff' f ·' g
+leibniz' f g i n = leibniz'-n f g n i
+
+leibniz : ∀ f g → (f · g)′ ≡ f · g ′  +  f ′ · g
+leibniz =
+  transport
+    (λ i → (f g : Series≡ℕ→R (~ i)) →
+      diffp i (mulp i f g) ≡ 
+        addp i (mulp i f (diffp i g)) (mulp i (diffp i f) g)
+    )
+    leibniz'
+

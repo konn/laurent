@@ -607,3 +607,24 @@ Series-CommRingStr = commringstr 0s 1s _+_ _·_ -_ Series-IsCommRing
 
 Series-CommRing : CommRing _
 Series-CommRing = (_ , Series-CommRingStr)
+
+X'-shift-n : ∀ f n → (f ·' X') (suc n) ≡ f n
+X'-shift-n f 0 =
+  f 0 ·R 1R +R f 1 ·R 0R 
+    ≡⟨ cong₂ _+R_ (fst (·R-identity (f 0))) (0R-absorb-r (f 1)) ⟩ 
+  f 0  +R 0R
+    ≡⟨ fst (+R-identity (f 0)) ⟩ 
+  f 0
+  ∎
+X'-shift-n f (suc n) =
+  (f ·' X') (suc (suc n)) 
+    ≡⟨ refl ⟩
+  f 0 ·R 0R +R (f ⁺ ·' X') (suc n)
+    ≡⟨ cong₂ _+R_ 
+        (0R-absorb-r (f 0))
+        (X'-shift-n (f ⁺) n)
+    ⟩
+  0R +R (f ⁺) n
+    ≡⟨ snd (+R-identity (f (suc n))) ⟩
+  f (suc n)
+    ∎
