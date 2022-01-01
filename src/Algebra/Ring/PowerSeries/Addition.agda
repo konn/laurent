@@ -103,3 +103,22 @@ addp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Ser
 addp i = transport-filler 
   (λ i → Series≡ℕ→R i → Series≡ℕ→R i → Series≡ℕ→R i) 
   _+_ (~ i)
+
++'-comm : ∀ f g → f +' g ≡ g +' f
++'-comm =
+  transport
+    (λ i → (f g : Series≡ℕ→R i) →
+      addp (~ i) f g ≡ addp (~ i) g f
+    )
+    +-comm
+
++'-assoc : ∀ f g h → f +' (g +' h) ≡ (f +' g) +' h
++'-assoc =
+  transport
+    (λ i → (f g h : Series≡ℕ→R i) →
+      addp (~ i) f (addp (~ i) g h) ≡ addp (~ i) (addp (~ i) f g) h
+    )
+    +-assoc
+
++'‿⁺ : ∀ f g → (f +' g) ⁺ ≡ f ⁺ +' g ⁺
++'‿⁺ f g = refl

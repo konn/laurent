@@ -7,6 +7,7 @@ open import Lemmas.IsoEquiv
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.Prelude
 open import Cubical.Algebra.Module
+open import Cubical.Algebra.Ring.Properties
 open import Cubical.Foundations.SIP
 open import Cubical.Data.Nat
   using ( ℕ ; suc )
@@ -96,9 +97,28 @@ scalarp i = scalarpInv (~ i)
 head (⋆-assoc r s x i) = ·R-assoc r s (head x) (~ i)
 tail (⋆-assoc r s x i) = ⋆-assoc r s (tail x) i
 
+⋆-assoc' : ∀ r s x → (r ·R s) ⋆' x ≡ r ⋆' (s ⋆' x)
+⋆-assoc' = 
+  transport
+    (λ i → (r s : ⟨ R ⟩) (x : Series≡ℕ→R i) →
+      let _⋆ᵢ_ = scalarpInv i
+      in (r ·R s) ⋆ᵢ x ≡ r ⋆ᵢ (s ⋆ᵢ x)
+    )
+    ⋆-assoc
+
 ⋆-ldist : ∀ r s x → (r +R s) ⋆ x ≡ (r ⋆ x) + (s ⋆ x)
 head (⋆-ldist r s x i) = R-·Ldist+ r s (head x) i
 tail (⋆-ldist r s x i) = ⋆-ldist r s (tail x) i
+
+⋆-ldist' : ∀ r s x → (r +R s) ⋆' x ≡ (r ⋆' x) +' (s ⋆' x)
+⋆-ldist' =
+  transport
+    (λ i → (r s : ⟨ R ⟩) (x : Series≡ℕ→R i) →
+      let _⋆ᵢ_ = scalarpInv i
+          _+ᵢ_ = addp (~ i)
+      in (r +R s) ⋆ᵢ x  ≡ (r ⋆ᵢ x) +ᵢ (s ⋆ᵢ x)
+    )
+    ⋆-ldist
 
 ⋆-rdist : ∀ r x y → r ⋆ (x + y) ≡ (r ⋆ x) + (r ⋆ y)
 head (⋆-rdist r x y i) = R-·Rdist+ r (head x) (head y) i
@@ -127,3 +147,33 @@ moduleStr = leftmodulestr 0s _+_ -_ _⋆_ ⋆-isLeftModule
 
 pow-module : LeftModule (CommRing→Ring R) _
 pow-module = (_ , moduleStr)
+
+open RingTheory (CommRing→Ring R) 
+  renaming
+    ( 0RightAnnihilates to 0R-absorb-r
+    ; 0LeftAnnihilates to 0R-absorb-l
+    )
+
+⋆0s≡0s : ∀ r → r ⋆ 0s ≡ 0s
+head (⋆0s≡0s r i) = 0R-absorb-r r i
+tail (⋆0s≡0s r i) = ⋆0s≡0s r i
+
+⋆0s≡0s' : ∀ r → r ⋆' 0s' ≡ 0s'
+⋆0s≡0s' =
+  transport
+    (λ i → (r : ⟨ R ⟩) →
+      scalarp (~ i) r (zerop (~ i)) ≡ zerop (~ i)
+    )
+    ⋆0s≡0s
+
+⋆1s≡⟦⟧ : ∀ r → r ⋆ 1s ≡ ⟦ r ⟧
+head (⋆1s≡⟦⟧ r i) = fst (·R-identity r) i
+tail (⋆1s≡⟦⟧ r i) = ⋆0s≡0s r i
+
+⋆1s≡⟦⟧' : ∀ r → r ⋆' 1s' ≡ ⟦ r ⟧'
+⋆1s≡⟦⟧' =
+  transport
+    (λ i → (r : ⟨ R ⟩) →
+      scalarp (~ i) r (onep (~ i)) ≡ ⟦ r ⟧p (~ i)
+    )
+    ⋆1s≡⟦⟧

@@ -65,6 +65,21 @@ transport⁻-isoToPath σ y =
     Iso.inv σ y
   ∎
 
+transportIsoToPathOp₁ :
+  ∀(σ : Iso A B) (f : A → A) (x : B)
+  → transport (λ i → isoToPath σ i → isoToPath σ i) f x
+    ≡ Iso.fun σ (f (Iso.inv σ x))
+transportIsoToPathOp₁ σ f x =
+    transport (λ i → isoToPath σ i → isoToPath σ i) f x
+  ≡⟨ refl ⟩
+    transport (λ i → ua (isoToEquiv σ) i → ua (isoToEquiv σ) i) f x
+  ≡⟨ transportUAop₁ (isoToEquiv σ) f x ⟩
+    Iso.fun σ (f (invEq (isoToEquiv σ) x))
+  ≡⟨ cong (λ l → Iso.fun σ (f l)) (λ i →  invEqIsoToEquiv σ i x) 
+    ⟩
+    Iso.fun σ (f (Iso.inv σ x))
+  ∎
+
 transportIsoToPathOp₂ :
   ∀(σ : Iso A B) (f : A → A → A) (x y : B)
   → transport (λ i → isoToPath σ i → isoToPath σ i → isoToPath σ i) f x y
