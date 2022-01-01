@@ -133,7 +133,7 @@ diff'0≡⁺0 f = snd (·R-identity (f 1))
 
 open Variables
 
-⁺′-+-′⁺ : ∀ f g n → (f ⁺ ·' diff' g) n +R (g ⁺ ·' diff' f) n 
+⁺′-+-′⁺ : ∀ f g n → (f ⁺ ·' diff' g) n +R (g ⁺ ·' diff' f) n
   ≡ fromNat (suc (suc n)) ·R (f ⁺ ·' g ⁺) n
 ⁺′-+-′⁺ f g 0 =
   (f ⁺ ·' diff' g) 0 +R (g ⁺ ·' diff' f) 0
@@ -196,7 +196,35 @@ leibniz'-n f g (suc n) = [fg]′⇒nf ∙ sym fg′+f′g⇒nf
       +R  fromNat (suc (suc n)) ·R (f ⁺ ·' g ⁺) n
     fg′+f′g⇒nf : (f ·' diff' g +' diff' f ·' g) (suc n) ≡ theGoal
     fg′+f′g⇒nf =
-      {!   !}
+      (f ·' diff' g +' diff' f ·' g) (suc n) 
+        ≡⟨ +'-compwise-n (f ·' diff' g) (diff' f ·' g) (suc n) ⟩
+      (f ·' diff' g) (suc n) +R (diff' f ·' g) (suc n) 
+        ≡⟨ cong₂ _+R_ refl
+          (·'-comm-n (diff' f) g (suc n))
+        ⟩
+      (f 0 ·R diff' g (suc n)  +R  (f ⁺ ·' diff' g) n)
+          +R
+      (g 0 ·R diff' f (suc n)  +R  (g ⁺ ·' diff' f) n)
+        ≡⟨( 
+          let lem0 : ∀ x y z w → (x +R y) +R (z +R w) ≡ (x +R z) +R (y +R w)
+              lem0 = solve R
+          in lem0 
+              (f 0 ·R diff' g (suc n))
+              ((f ⁺ ·' diff' g) n)
+              (g 0 ·R diff' f (suc n))
+              ((g ⁺ ·' diff' f) n)
+        )⟩
+      f 0 ·R (diff' g (suc n))
+        +R  g 0 ·R (diff' f (suc n))
+        +R ((f ⁺ ·' diff' g) n +R (g ⁺ ·' diff' f) n)
+        ≡⟨ cong
+          (f 0 ·R (diff' g (suc n)) +R  g 0 ·R (diff' f (suc n)) +R_)
+          (⁺′-+-′⁺ f g n)
+        ⟩
+      f 0 ·R (diff' g (suc n))
+        +R  g 0 ·R (diff' f (suc n))
+        +R  n+2 ·R (f ⁺ ·' g ⁺) n
+        ∎
     [fg]′⇒nf : diff' (f ·' g) (suc n) ≡ theGoal
     [fg]′⇒nf = 
       diff' (f ·' g) (suc n)
