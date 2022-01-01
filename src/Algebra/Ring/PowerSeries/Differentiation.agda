@@ -133,6 +133,13 @@ diff'0≡⁺0 f = snd (·R-identity (f 1))
 
 open Variables
 
+private
+  R-distr3-L : ∀ r x y z → r ·R (x +R y +R z) ≡ r ·R x +R r ·R y +R r ·R z
+  R-distr3-L = solve R
+
+  x[yz]≡y[xz] : ∀ x y z → x ·R (y ·R z) ≡ y ·R (x ·R z)
+  x[yz]≡y[xz] = solve R
+
 ⁺′-+-′⁺ : ∀ f g n → (f ⁺ ·' diff' g) n +R (g ⁺ ·' diff' f) n
   ≡ fromNat (suc (suc n)) ·R (f ⁺ ·' g ⁺) n
 ⁺′-+-′⁺ f g 0 =
@@ -161,11 +168,26 @@ open Variables
     ≡⟨ sym (R-·Ldist+ 1R 1R (f 1 ·R g 1)) ⟩
   fromNat 2 ·R (f ⁺ ·' g ⁺) 0
     ∎
-⁺′-+-′⁺ f g (suc n) = {!   !}
-
-private
-  R-distr3-L : ∀ r x y z → r ·R (x +R y +R z) ≡ r ·R x +R r ·R y +R r ·R z
-  R-distr3-L = solve R
+⁺′-+-′⁺ f g (suc n) =
+  (f ⁺ ·' diff' g) (suc n) +R (g ⁺ ·' diff' f) (suc n)
+    ≡⟨ cong ((f ⁺ ·' diff' g) (suc n) +R_)
+      (·'-comm-n (g ⁺) (diff' f) (suc n))
+    ⟩
+  (f⁺ 0 ·R diff' g (suc n) +R (f ⁺ ⁺ ·' diff' g) n)
+    +R
+  (diff' f 0 ·R g [2+n]  +R  ((diff' f) ⁺ ·' g ⁺) n)
+    ≡⟨ {!   !} ⟩ 
+  (fromNat [2+n] ·R (f⁺ 0 ·R g [2+n]) +R (f ⁺ ⁺ ·' diff' g) n)
+    +R
+  (f⁺ 0 ·R g [2+n]  +R  ((diff' f)⁺ ·' g ⁺) n)
+    ≡⟨ {!   !} ⟩ 
+  fromNat [3+n] ·R (f ⁺ ·' g ⁺) (suc n)
+    ∎
+  where
+    f⁺ = f ⁺
+    g⁺ = g ⁺
+    [2+n] = suc (suc n)
+    [3+n] = suc (suc (suc n))
 
 leibniz'-n : ∀ f g n → diff' (f ·' g) n ≡ (f ·' diff' g  +'  diff' f ·' g) n
 leibniz'-n f g 0 =
@@ -189,7 +211,7 @@ leibniz'-n f g 0 =
     ∎
 leibniz'-n f g (suc n) = [fg]′⇒nf ∙ sym fg′+f′g⇒nf
   where
-    n+2 = fromNat (suc (suc n))
+    2+n = fromNat (suc (suc n))
     theGoal = 
           f 0 ·R (diff' g (suc n)) 
       +R  g 0 ·R (diff' f (suc n))
@@ -223,16 +245,16 @@ leibniz'-n f g (suc n) = [fg]′⇒nf ∙ sym fg′+f′g⇒nf
         ⟩
       f 0 ·R (diff' g (suc n))
         +R  g 0 ·R (diff' f (suc n))
-        +R  n+2 ·R (f ⁺ ·' g ⁺) n
+        +R  2+n ·R (f ⁺ ·' g ⁺) n
         ∎
     [fg]′⇒nf : diff' (f ·' g) (suc n) ≡ theGoal
     [fg]′⇒nf = 
       diff' (f ·' g) (suc n)
         ≡⟨ refl ⟩
-      n+2 ·R ((f ·' g) ⁺) (suc n)
-        ≡⟨ cong (λ x → n+2 ·R x (suc n)) (·'‿⁺-unfold f g) ⟩
-      n+2 ·R (f 0 ⋆' g ⁺ +' (f ⁺ ·' g ⁺) ·' X' +' g 0 ⋆' f ⁺) (suc n)
-        ≡⟨ cong (n+2 ·R_) 
+      2+n ·R ((f ·' g) ⁺) (suc n)
+        ≡⟨ cong (λ x → 2+n ·R x (suc n)) (·'‿⁺-unfold f g) ⟩
+      2+n ·R (f 0 ⋆' g ⁺ +' (f ⁺ ·' g ⁺) ·' X' +' g 0 ⋆' f ⁺) (suc n)
+        ≡⟨ cong (2+n ·R_) 
             (+'-+'-+'-compwise
                 (f 0 ⋆' g ⁺)
                 ((f ⁺ ·' g ⁺) ·' X')
@@ -240,42 +262,40 @@ leibniz'-n f g (suc n) = [fg]′⇒nf ∙ sym fg′+f′g⇒nf
                 (suc n)
               )
         ⟩
-      n+2 ·R 
+      2+n ·R 
         ( (f 0 ⋆' g ⁺) (suc n) 
           +R ((f ⁺ ·' g ⁺) ·' X') (suc n) 
           +R (g 0 ⋆' f ⁺)  (suc n)
         )
-        ≡⟨ R-distr3-L n+2 
+        ≡⟨ R-distr3-L 2+n 
             ((f 0 ⋆' g ⁺) (suc n)) 
             (((f ⁺ ·' g ⁺) ·' X') (suc n) )
             ((g 0 ⋆' f ⁺)  (suc n))
         ⟩
-      n+2 ·R (f 0 ·R g (suc (suc n))) 
-        +R n+2 ·R ((f ⁺ ·' g ⁺) ·' X') (suc n) 
-        +R n+2 ·R (g 0 ·R f (suc (suc n)))
-        ≡⟨( let lem0 : ∀ x y z → x ·R (y ·R z) ≡ y ·R (x ·R z)
-                lem0 = solve R
-             in cong₂ _+R_ 
-              (cong₂ _+R_ 
-                (lem0 n+2 (f 0) (g (suc (suc n))))
-                (cong (n+2 ·R_) (X'-shift-n (f ⁺ ·' g ⁺) n))
-              )
-              (lem0 n+2 (g 0) (f (suc (suc n))))
-        )⟩
+      2+n ·R (f 0 ·R g (suc (suc n))) 
+        +R 2+n ·R ((f ⁺ ·' g ⁺) ·' X') (suc n) 
+        +R 2+n ·R (g 0 ·R f (suc (suc n)))
+        ≡⟨ cong₂ _+R_ 
+            (cong₂ _+R_ 
+              (x[yz]≡y[xz] 2+n (f 0) (g (suc (suc n))))
+              (cong (2+n ·R_) (X'-shift-n (f ⁺ ·' g ⁺) n))
+            )
+            (x[yz]≡y[xz] 2+n (g 0) (f (suc (suc n))))
+        ⟩
       f 0 ·R (diff' g (suc n))
-        +R n+2 ·R (f ⁺ ·' g ⁺) n
+        +R 2+n ·R (f ⁺ ·' g ⁺) n
         +R g 0 ·R (diff' f (suc n))
         ≡⟨( let lem0 : ∀ x y z → x +R y +R z ≡ x +R z +R y
                 lem0 = solve R
              in lem0
                   (f 0 ·R (diff' g (suc n)))
-                  (n+2 ·R ((f ⁺ ·' g ⁺)  n))
+                  (2+n ·R ((f ⁺ ·' g ⁺)  n))
                   (g 0 ·R (diff' f (suc n)))
           )
         ⟩
           f 0 ·R (diff' g (suc n))
       +R  g 0 ·R (diff' f (suc n))
-      +R  n+2 ·R (f ⁺ ·' g ⁺) n
+      +R  2+n ·R (f ⁺ ·' g ⁺) n
         ∎
 
 leibniz' : ∀ f g → diff' (f ·' g) ≡ f ·' diff' g  +'  diff' f ·' g
