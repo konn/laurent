@@ -140,6 +140,22 @@ private
   x[yz]≡y[xz] : ∀ x y z → x ·R (y ·R z) ≡ y ·R (x ·R z)
   x[yz]≡y[xz] = solve R
 
+  seq-lem0 : ∀ a b c d → a +' (b +' (c ·' d)) ≡ b +' (a +' (d ·' c))
+  -- We wanted to use Reflection solver, but it seems
+  -- it gets stuck in the ocean of transports...
+  seq-lem0 a b c d = 
+    a +' (b +' (c ·' d)) 
+      ≡⟨ +'-assoc a b (c ·' d) ⟩
+    (a +' b) +' (c ·' d)
+      ≡⟨ cong₂ _+'_ 
+        (+'-comm a b)
+        (·'-comm c d)
+      ⟩
+    (b +' a) +' (d ·' c)
+      ≡⟨ sym (+'-assoc b a (d ·' c)) ⟩
+    b +' (a +' (d ·' c))
+      ∎
+
 ⁺′-+-′⁺ : ∀ f g n → (f ⁺ ·' diff' g) n +R (g ⁺ ·' diff' f) n
   ≡ fromNat (suc (suc n)) ·R (f ⁺ ·' g ⁺) n
 ⁺′-+-′⁺ f g 0 =
@@ -176,11 +192,62 @@ private
   (f⁺ 0 ·R diff' g (suc n) +R (f ⁺ ⁺ ·' diff' g) n)
     +R
   (diff' f 0 ·R g [2+n]  +R  ((diff' f) ⁺ ·' g ⁺) n)
-    ≡⟨ {!   !} ⟩ 
+    ≡⟨ cong₂ _+R_
+        (cong (_+R (f ⁺ ⁺ ·' diff' g) n)
+          (x[yz]≡y[xz] (f⁺ 0) (fromNat [2+n]) (g [2+n]))
+        )
+        (cong₂ _+R_
+          (cong (_·R g [2+n]) (diff'-0 f))
+          (cong (λ z → (z ·' g ⁺) n) (diff'-⁺ f))
+        )
+    ⟩ 
   (fromNat [2+n] ·R (f⁺ 0 ·R g [2+n]) +R (f ⁺ ⁺ ·' diff' g) n)
     +R
-  (f⁺ 0 ·R g [2+n]  +R  ((diff' f)⁺ ·' g ⁺) n)
-    ≡⟨ {!   !} ⟩ 
+  ((f⁺ 0 ·R g [2+n])  +R  ((f ⁺ ⁺ +' diff' (f ⁺)) ·' g ⁺) n)
+    ≡⟨( 
+      let lem0 : ∀ r a b c → (r ·R a +R b) +R (a +R c) 
+                  ≡ (1R +R r) ·R a +R (b +R c)
+          lem0 = solve R
+      in lem0 (fromNat [2+n]) (f⁺ 0 ·R g [2+n])
+            ((f ⁺ ⁺ ·' diff' g) n)
+            (((f ⁺ ⁺ +' diff' (f ⁺)) ·' g ⁺) n)
+    )⟩ 
+  fromNat [3+n] ·R (f⁺ 0 ·R g [2+n])
+    +R
+  ((f ⁺ ⁺ ·' diff' g) n  +R  ((f ⁺ ⁺ +' diff' (f ⁺)) ·' g ⁺) n)
+    ≡⟨ cong (fromNat [3+n] ·R (f⁺ 0 ·R g [2+n]) +R_)
+      (((f ⁺ ⁺ ·' diff' g) n  +R  ((f ⁺ ⁺ +' diff' (f ⁺)) ·' g ⁺) n
+          ≡⟨ cong ((f ⁺ ⁺ ·' diff' g) n  +R_)
+              (·'‿+'-distrib-r-n (f ⁺ ⁺) (diff' (f ⁺)) (g ⁺) n)
+          ⟩
+        (f ⁺ ⁺ ·' diff' g) n  +R  ((f ⁺ ⁺  ·' g ⁺) +' (diff' (f ⁺)  ·' g ⁺)) n
+          ≡⟨ sym (+'-compwise-n (f ⁺ ⁺ ·' diff' g) _ n) ⟩
+        ((f⁺ ⁺ ·' diff' g) +' ((f ⁺ ⁺  ·' g ⁺) +' (diff' f⁺ ·' g⁺))) n
+          ≡⟨ cong (λ k → k n) (
+              seq-lem0 (f⁺ ⁺ ·' diff' g) (f ⁺ ⁺  ·' g ⁺) (diff' f⁺) (g ⁺)
+          )⟩
+        ((f ⁺ ⁺  ·' g ⁺) +' ((f⁺ ⁺ ·' diff' g) +' (g⁺ ·' diff' f⁺))) n
+          ≡⟨ +'-compwise-n (f ⁺ ⁺ ·' g ⁺) _ n ⟩
+        ((f ⁺ ⁺  ·' g ⁺) n +R ((f⁺ ⁺ ·' diff' g) +' (g⁺ ·' diff' f⁺)) n)
+          ≡⟨ cong ((f ⁺ ⁺  ·' g ⁺) n +R_) 
+              (+'-compwise-n _ _ n ∙ ⁺′-+-′⁺ (f ⁺) g n)
+          ⟩
+        (f ⁺ ⁺  ·' g ⁺) n +R fromNat [2+n] ·R (f ⁺ ⁺  ·' g ⁺) n
+          ≡⟨(
+            let lem0 : ∀ r a → a +R (r ·R a) ≡ (1R +R r) ·R a
+                lem0 = solve R
+            in lem0 (fromNat [2+n]) ((f ⁺ ⁺  ·' g ⁺) n)
+          )⟩
+        fromNat [3+n] ·R (f ⁺ ⁺  ·' g ⁺) n
+          ∎
+      ))
+    ⟩
+  fromNat [3+n] ·R (f⁺ 0 ·R g [2+n])
+    +R
+  fromNat [3+n] ·R (f ⁺ ⁺  ·' g ⁺) n
+    ≡⟨ sym (R-·Rdist+ (fromNat [3+n]) (f⁺ 0 ·R g [2+n]) ((f ⁺ ⁺  ·' g ⁺) n)) ⟩
+  fromNat [3+n] ·R (f⁺ 0 ·R g [2+n] +R (f ⁺ ⁺  ·' g ⁺) n)
+    ≡⟨ refl ⟩ 
   fromNat [3+n] ·R (f ⁺ ·' g ⁺) (suc n)
     ∎
   where

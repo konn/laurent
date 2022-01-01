@@ -608,6 +608,30 @@ Series-CommRingStr = commringstr 0s 1s _+_ _·_ -_ Series-IsCommRing
 Series-CommRing : CommRing _
 Series-CommRing = (_ , Series-CommRingStr)
 
+infix  8 -'_
+-'_ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
+-'_ = transport (λ i → Series≡ℕ→R i → Series≡ℕ→R i) -_
+
+negpInv : PathP (λ i → Series≡ℕ→R i → Series≡ℕ→R i) -_ -'_
+negpInv =
+  transport-filler (λ i → Series≡ℕ→R i → Series≡ℕ→R i) -_
+
+negp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) -'_ -_
+negp i = negpInv (~ i)
+
+ℕ→R-IsCommRing : IsCommRing 0s' 1s' _+'_ _·'_ -'_
+ℕ→R-IsCommRing =
+  transport
+    (λ i → IsCommRing (zerop (~ i)) (onep (~ i)) (addp (~ i)) (mulp (~ i)) (negp (~ i)) )
+    Series-IsCommRing
+
+ℕ→R-CommRingStr : CommRingStr (ℕ → ⟨ R ⟩)
+ℕ→R-CommRingStr = 
+  commringstr 0s' 1s' _+'_ _·'_ -'_ ℕ→R-IsCommRing
+
+ℕ→R-CommRing : CommRing _
+ℕ→R-CommRing = (_ , ℕ→R-CommRingStr)
+
 X'-shift-n : ∀ f n → (f ·' X') (suc n) ≡ f n
 X'-shift-n f 0 =
   f 0 ·R 1R +R f 1 ·R 0R 
