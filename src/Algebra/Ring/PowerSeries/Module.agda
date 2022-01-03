@@ -78,9 +78,9 @@ private
     transport (λ i → ⟨ R ⟩ → Series≡ℕ→R i → Series≡ℕ→R i) _⋆_ ≡ _⋆'_
   aux i c y n = aux₁ c y n i
 
-scalarpInv : 
+scalarp⁻ : 
   PathP (λ i → ⟨ R ⟩ → Series≡ℕ→R i → Series≡ℕ→R i) _⋆_ _⋆'_
-scalarpInv =
+scalarp⁻ =
   subst 
     (PathP (λ i → ⟨ R ⟩ → Series≡ℕ→R i → Series≡ℕ→R i) _⋆_)
     aux
@@ -91,7 +91,7 @@ scalarpInv =
     lem = transport-filler (λ i → ⟨ R ⟩ → Series≡ℕ→R i → Series≡ℕ→R i) _⋆_
 
 scalarp : PathP (λ i → ⟨ R ⟩ → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _⋆'_ _⋆_
-scalarp i = scalarpInv (~ i)
+scalarp i = scalarp⁻ (~ i)
 
 ⋆-assoc : ∀ r s x → (r ·R s) ⋆ x ≡ r ⋆ (s ⋆ x)
 head (⋆-assoc r s x i) = ·R-assoc r s (head x) (~ i)
@@ -101,7 +101,7 @@ tail (⋆-assoc r s x i) = ⋆-assoc r s (tail x) i
 ⋆-assoc' = 
   transport
     (λ i → (r s : ⟨ R ⟩) (x : Series≡ℕ→R i) →
-      let _⋆ᵢ_ = scalarpInv i
+      let _⋆ᵢ_ = scalarp⁻ i
       in (r ·R s) ⋆ᵢ x ≡ r ⋆ᵢ (s ⋆ᵢ x)
     )
     ⋆-assoc
@@ -114,7 +114,7 @@ tail (⋆-ldist r s x i) = ⋆-ldist r s (tail x) i
 ⋆-ldist' =
   transport
     (λ i → (r s : ⟨ R ⟩) (x : Series≡ℕ→R i) →
-      let _⋆ᵢ_ = scalarpInv i
+      let _⋆ᵢ_ = scalarp⁻ i
           _+ᵢ_ = addp (~ i)
       in (r +R s) ⋆ᵢ x  ≡ (r ⋆ᵢ x) +ᵢ (s ⋆ᵢ x)
     )
@@ -128,7 +128,7 @@ tail (⋆-rdist r x y i) = ⋆-rdist r (tail x) (tail y) i
 ⋆-rdist' =
   transport
     (λ i → (r : ⟨ R ⟩) (x y : Series≡ℕ→R i) →
-      let _⋆ᵢ_ = scalarpInv i
+      let _⋆ᵢ_ = scalarp⁻ i
           _+ᵢ_ = addp (~ i)
       in r ⋆ᵢ (x +ᵢ y) ≡ (r ⋆ᵢ x) +ᵢ (r ⋆ᵢ y)
     )

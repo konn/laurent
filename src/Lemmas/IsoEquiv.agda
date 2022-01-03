@@ -65,6 +65,11 @@ transport⁻-isoToPath σ y =
     Iso.inv σ y
   ∎
 
+transportIsoToPathOp₁-Arg : ∀ (σ : Iso A B) (f : A → C) (x : B)
+  → transport (λ i → isoToPath σ i → C) f x ≡ f (Iso.inv σ x)
+transportIsoToPathOp₁-Arg σ f x i =
+    transportRefl (f (Iso.inv σ (transportRefl x i))) i
+
 transportIsoToPathOp₁ :
   ∀(σ : Iso A B) (f : A → A) (x : B)
   → transport (λ i → isoToPath σ i → isoToPath σ i) f x

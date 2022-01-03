@@ -612,12 +612,12 @@ infix  8 -'_
 -'_ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
 -'_ = transport (λ i → Series≡ℕ→R i → Series≡ℕ→R i) -_
 
-negpInv : PathP (λ i → Series≡ℕ→R i → Series≡ℕ→R i) -_ -'_
-negpInv =
+negp⁻ : PathP (λ i → Series≡ℕ→R i → Series≡ℕ→R i) -_ -'_
+negp⁻ =
   transport-filler (λ i → Series≡ℕ→R i → Series≡ℕ→R i) -_
 
 negp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) -'_ -_
-negp i = negpInv (~ i)
+negp i = negp⁻ (~ i)
 
 ℕ→R-IsCommRing : IsCommRing 0s' 1s' _+'_ _·'_ -'_
 ℕ→R-IsCommRing =
@@ -652,3 +652,58 @@ X'-shift-n f (suc n) =
     ≡⟨ snd (+R-identity (f (suc n))) ⟩
   f (suc n)
     ∎
+
+·-head : ∀ f g → head (f · g) ≡ head f ·R head g
+·-head f g =
+  head (f · g)
+    ≡⟨ cong head (liftℕ→ROp₂-unfold _·'_ f g) ⟩
+  head (ℕ→R⟶Series (Series⟶ℕ→R f ·' Series⟶ℕ→R g))
+    ≡⟨ refl ⟩
+  (Series⟶ℕ→R f) 0 ·R (Series⟶ℕ→R g) 0
+    ≡⟨ refl ⟩
+  head f ·R head g
+    ∎
+
+·'-tail : ∀ f g → (f ·' g)⁺ ≡ f 0 ⋆' g ⁺ +' f ⁺ ·' g
+·'-tail f g = sym (+'-compwise (f 0 ⋆' g ⁺) (f ⁺ ·' g))
+
+·-tail : ∀ f g → tail (f · g) ≡ head f ⋆ tail g + tail f · g
+·-tail =
+  transport
+    (λ i → (x y : Series≡ℕ→R (~ i)) → 
+      let tailᵢ = tailp i
+          headᵢ = headp i
+          _·ᵢ_ = mulp i
+          _+ᵢ_ = addp i
+          _⋆ᵢ_ = scalarp i
+      in tailᵢ (x ·ᵢ y) ≡ (headᵢ x ⋆ᵢ tailᵢ y) +ᵢ (tailᵢ x ·ᵢ y)
+    )
+    ·'-tail
+
+·-unfold : ∀ f g → (f · g) ≡ (head f ·R head g) ∷ (head f ⋆ tail g + tail f · g)
+head (·-unfold f g i) = ·-head f g i
+tail (·-unfold f g i) = ·-tail f g i
+
+·-tail-symmetric : ∀ f g → 
+  tail (f · g) ≡ head f ⋆ tail g + (tail f · tail g) · X + head g ⋆ tail f
+·-tail-symmetric =
+  transport
+    (λ i → (f g : Series≡ℕ→R (~ i)) → 
+      let tailᵢ = tailp i
+          headᵢ = headp i
+          Xᵢ = Xp i
+          _·ᵢ_ = mulp i
+          _+ᵢ_ = addp i
+          _⋆ᵢ_ = scalarp i
+      in tailᵢ (f ·ᵢ g) ≡
+        ((headᵢ f ⋆ᵢ tailᵢ g) +ᵢ ((tailᵢ f ·ᵢ tailᵢ g) ·ᵢ Xᵢ)) 
+          +ᵢ (headᵢ g ⋆ᵢ tailᵢ f)
+    )
+    ·'‿⁺-unfold
+
+·-unfold-symmetric : ∀ f g → 
+  (f · g) 
+    ≡ (head f ·R head g) 
+        ∷ (head f ⋆ tail g + (tail f · tail g) · X + head g ⋆ tail f)
+head (·-unfold-symmetric f g i) = ·-head f g i
+tail (·-unfold-symmetric f g i) = ·-tail-symmetric f g i

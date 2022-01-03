@@ -113,8 +113,8 @@ tail-to-⁺ f = refl
 1s'≡1s i 0 = 1R
 1s'≡1s i (suc n) = 0s'≡0s i n
 
-onepInv : PathP (λ i → Series≡ℕ→R i) 1s 1s'
-onepInv = subst (PathP (λ i → Series≡ℕ→R i) 1s) 
+onep⁻ : PathP (λ i → Series≡ℕ→R i) 1s 1s'
+onep⁻ = subst (PathP (λ i → Series≡ℕ→R i) 1s) 
   (  
   transport Series≡ℕ→R 1s
     ≡[ i ]⟨ transport-isoToPath Series≃ℕ→R i  1s  ⟩
@@ -123,16 +123,16 @@ onepInv = subst (PathP (λ i → Series≡ℕ→R i) 1s)
   1s'
     ∎
   )
-  onepInvAux
+  onep⁻Aux
   where
-    onepInvAux : PathP (λ i → Series≡ℕ→R i) 1s (transport Series≡ℕ→R  1s)
-    onepInvAux = transport-filler Series≡ℕ→R 1s
+    onep⁻Aux : PathP (λ i → Series≡ℕ→R i) 1s (transport Series≡ℕ→R  1s)
+    onep⁻Aux = transport-filler Series≡ℕ→R 1s
 
 onep : PathP (λ i → Series≡ℕ→R (~ i)) 1s' 1s
-onep i = onepInv (~ i)
+onep i = onep⁻ (~ i)
 
-zeropInv : PathP (λ i → Series≡ℕ→R i) 0s 0s'
-zeropInv = subst (PathP (λ i → Series≡ℕ→R i) 0s)
+zerop⁻ : PathP (λ i → Series≡ℕ→R i) 0s 0s'
+zerop⁻ = subst (PathP (λ i → Series≡ℕ→R i) 0s)
   (  
   transport Series≡ℕ→R 0s
     ≡[ i ]⟨ transport-isoToPath Series≃ℕ→R i  0s  ⟩
@@ -141,13 +141,13 @@ zeropInv = subst (PathP (λ i → Series≡ℕ→R i) 0s)
   0s'
     ∎
   )
-  onepInvAux
+  onep⁻Aux
   where
-    onepInvAux : PathP (λ i → Series≡ℕ→R i) 0s (transport Series≡ℕ→R  0s)
-    onepInvAux = transport-filler Series≡ℕ→R 0s
+    onep⁻Aux : PathP (λ i → Series≡ℕ→R i) 0s (transport Series≡ℕ→R  0s)
+    onep⁻Aux = transport-filler Series≡ℕ→R 0s
 
 zerop : PathP (λ i → Series≡ℕ→R (~ i)) 0s' 0s
-zerop i = zeropInv (~ i)
+zerop i = zerop⁻ (~ i)
 
 ⟦_⟧ : ⟨ R ⟩ → PowerSeries
 head ⟦ x ⟧ = x
@@ -161,8 +161,8 @@ tail ⟦ x ⟧ = 0s
 ⟦ x ⟧'≡⟦⟧ i 0 = x
 ⟦ x ⟧'≡⟦⟧ i (suc n) = 0s'≡0s i n
 
-⟦_⟧pInv : ∀ x → PathP (λ i → Series≡ℕ→R i) ⟦ x ⟧ ⟦ x ⟧'
-⟦ x ⟧pInv = subst (PathP (λ i → Series≡ℕ→R i) ⟦ x ⟧) 
+⟦_⟧p⁻ : ∀ x → PathP (λ i → Series≡ℕ→R i) ⟦ x ⟧ ⟦ x ⟧'
+⟦ x ⟧p⁻ = subst (PathP (λ i → Series≡ℕ→R i) ⟦ x ⟧) 
   (  
   transport Series≡ℕ→R ⟦ x ⟧
     ≡[ i ]⟨ transport-isoToPath Series≃ℕ→R i  ⟦ x ⟧ ⟩
@@ -171,16 +171,16 @@ tail ⟦ x ⟧ = 0s
   ⟦ x ⟧'
     ∎
   )
-  onepInvAux
+  onep⁻Aux
   where
-    onepInvAux : PathP (λ i → Series≡ℕ→R i) ⟦ x ⟧ (transport Series≡ℕ→R ⟦ x ⟧)
-    onepInvAux = transport-filler Series≡ℕ→R ⟦ x ⟧
+    onep⁻Aux : PathP (λ i → Series≡ℕ→R i) ⟦ x ⟧ (transport Series≡ℕ→R ⟦ x ⟧)
+    onep⁻Aux = transport-filler Series≡ℕ→R ⟦ x ⟧
 
 ⟦_⟧p : ∀ x → PathP (λ i → Series≡ℕ→R (~ i)) ⟦ x ⟧' ⟦ x ⟧
-⟦ x ⟧p i = ⟦ x ⟧pInv (~ i)
+⟦ x ⟧p i = ⟦ x ⟧p⁻ (~ i)
 
-tailpInv : PathP (λ i → Series≡ℕ→R i → Series≡ℕ→R i) tail _⁺
-tailpInv =
+tailp⁻ : PathP (λ i → Series≡ℕ→R i → Series≡ℕ→R i) tail _⁺
+tailp⁻ =
   subst (PathP (λ i → Series≡ℕ→R i → Series≡ℕ→R i) tail) 
     (funExt 
       (λ f →
@@ -197,7 +197,25 @@ tailpInv =
     (transport-filler (λ i → Series≡ℕ→R i → Series≡ℕ→R i) tail)
 
 tailp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _⁺ tail
-tailp i = tailpInv (~ i)
+tailp i = tailp⁻ (~ i)
+
+headp⁻ : PathP (λ i → Series≡ℕ→R i → ⟨ R ⟩) head (λ f → f 0)
+headp⁻ =
+  subst (PathP (λ i → Series≡ℕ→R i → ⟨ R ⟩) head)
+    (funExt 
+      (λ f →
+          transport (λ i → Series≡ℕ→R i → ⟨ R ⟩) head f
+            ≡⟨ transportIsoToPathOp₁-Arg Series≃ℕ→R head f ⟩
+          head (ℕ→R⟶Series f)
+            ≡⟨ refl ⟩
+          f 0
+            ∎
+      )
+    )
+    (transport-filler (λ i → Series≡ℕ→R i → ⟨ R ⟩) head)
+
+headp : PathP (λ i → Series≡ℕ→R (~ i) → ⟨ R ⟩) (λ f → f 0) head
+headp i = headp⁻ (~ i)
 
 module Variables where
   X : PowerSeries
@@ -213,8 +231,8 @@ module Variables where
   X' 0 = 0R
   X' (suc n) = 1s' n
 
-  XpInv : PathP (λ i → Series≡ℕ→R i) X X'
-  XpInv = subst (PathP (λ i → Series≡ℕ→R i) X)
+  Xp⁻ : PathP (λ i → Series≡ℕ→R i) X X'
+  Xp⁻ = subst (PathP (λ i → Series≡ℕ→R i) X)
     (
       transport Series≡ℕ→R X
         ≡[ i ]⟨ transport-isoToPath Series≃ℕ→R i X ⟩
@@ -231,4 +249,4 @@ module Variables where
     (transport-filler Series≡ℕ→R X)
 
   Xp : PathP (λ i → Series≡ℕ→R (~ i)) X' X
-  Xp i = XpInv (~ i)
+  Xp i = Xp⁻ (~ i)
