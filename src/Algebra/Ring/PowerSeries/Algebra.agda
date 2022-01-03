@@ -10,6 +10,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Transport
 open import Cubical.Algebra.Algebra
+open import Cubical.Algebra.CommAlgebra
 open import Cubical.Foundations.SIP
 open import Cubical.Data.Nat
   using ( ℕ ; suc )
@@ -25,6 +26,7 @@ open CommRingStr (snd R) renaming
   ; +Comm to +R-comm
   ; +Identity to +R-identity
   ; +Inv to +R-inverse
+  ; ·-comm to ·R-comm
   ; ·Assoc to ·R-assoc
   ; ·Identity to ·R-identity
   ; is-set to R-isSet
@@ -32,81 +34,35 @@ open CommRingStr (snd R) renaming
   ; ·Ldist+ to R-·Ldist+
   )
 
-⋆-lassoc-n' : ∀ r x y n → ((r ⋆' x) ·' y) n ≡ (r ⋆' (x ·' y)) n
-⋆-lassoc-n' r x y 0 = 
-    ((r ⋆' x) ·' y) 0
-      ≡⟨ refl ⟩
-    (r ·R x 0) ·R y 0
-      ≡⟨ sym (·R-assoc r (x 0) (y 0)) ⟩
-    r ·R (x 0 ·R y 0)
-      ≡⟨ refl ⟩
-    (r ⋆' (x ·' y)) 0
-      ∎
-⋆-lassoc-n' r x y (suc n) = 
-    ((r ⋆' x) ·' y) (suc n)
-      ≡⟨ refl ⟩
-    ((r ⋆' x) ·' y ⁺) n  +R  ((r ⋆' (x  ⁺)) ·' y) n
-      ≡⟨ cong₂ _+R_ (⋆-lassoc-n' r x (y ⁺) n) (⋆-lassoc-n' r (x ⁺) y n) ⟩
-    (r ⋆' (x ·' y ⁺)) n  +R  (r ⋆' ((x  ⁺) ·' y)) n
-      ≡⟨ sym (+'-compwise-n (r ⋆' (x ·' y ⁺)) (r ⋆' ((x  ⁺) ·' y)) n) ⟩
-    (r ⋆' (x ·' y ⁺) +' r ⋆' ((x  ⁺) ·' y)) n
-      ≡⟨ cong (λ f → f n) (sym (⋆-rdist' r (x ·' y ⁺) ((x  ⁺) ·' y))) ⟩
-    (r ⋆' ((x ·' y ⁺) +' ((x  ⁺) ·' y))) n
-      ≡⟨ refl ⟩
-    r ·R ((x ·' y ⁺) +' ((x ⁺) ·' y)) n
-      ≡⟨ cong (r ·R_) (+'-compwise-n (x ·' y ⁺) ((x  ⁺) ·' y) n) ⟩
-    r ·R ((x ·' y ⁺) n +R ((x ⁺) ·' y) n)
-      ≡⟨ refl ⟩
-    (r ⋆' (x ·' y)) (suc n)
-      ∎
-
 ⋆-lassoc : ∀ r x y → (r ⋆ x) · y ≡ (r ⋆ (x · y))
-⋆-lassoc = 
-  transport⁻
-    (λ i → (r : ⟨ R ⟩) (x y : Series≡ℕ→R i) →
-      let _⋆ᵢ_ = scalarp (~ i)
-          _·ᵢ_ = mulp (~ i)
-      in (r ⋆ᵢ x) ·ᵢ y ≡ (r ⋆ᵢ (x ·ᵢ y))
-    )
-    (λ r x y i n → ⋆-lassoc-n' r x y n i)
+⋆-lassoc r x y =
+    (r ⋆ x) · y 
+  ≡⟨ cong (_· y) (sym (⟦r⟧·x≡r⋆x r x)) ⟩
+    (⟦ r ⟧ · x) · y
+  ≡⟨ sym (·-assoc _ _ _) ⟩
+    ⟦ r ⟧ · (x · y)
+  ≡⟨ ⟦r⟧·x≡r⋆x r (x · y) ⟩
+    r ⋆ (x · y)
+  ∎
 
 open import Cubical.Algebra.RingSolver.ReflectionSolving
 
 private
-  lem : ∀ (r x0 y0 : ⟨ R ⟩) → r ·R (x0 ·R y0) ≡ x0 ·R (r ·R y0)
-  lem = solve R
-
-⋆-rassoc'-n : ∀ r x y n → (r ⋆' (x ·' y)) n ≡ (x ·' (r ⋆' y)) n
-⋆-rassoc'-n r x y 0 =
-  (r ⋆' (x ·' y)) 0
-    ≡⟨ refl ⟩
-  r ·R (x 0 ·R y 0)
-    ≡⟨ lem r (x 0) (y 0) ⟩ 
-  x 0 ·R (r ·R y 0) 
-    ≡⟨ refl ⟩
-  (x ·' (r ⋆' y)) 0
-    ∎
-⋆-rassoc'-n r x y (suc n) =
-  (r ⋆' (x ·' y)) (suc n)
-    ≡⟨ refl ⟩
-  r ·R ((x ·' y ⁺) n +R (x ⁺ ·' y) n)
-    ≡⟨ R-·Rdist+  r ((x ·' y ⁺) n) ((x ⁺ ·' y) n) ⟩
-  (r ⋆' (x ·' y ⁺)) n +R (r ⋆' (x ⁺ ·' y)) n
-    ≡⟨ cong₂ _+R_ (⋆-rassoc'-n r x (y ⁺) n) (⋆-rassoc'-n r (x ⁺) y n) ⟩
-  (x ·' (r ⋆' y)⁺) n +R (x ⁺ ·' (r ⋆' y)) n
-    ≡⟨ refl ⟩
-  (x ·' (r ⋆' y)) (suc n)
-    ∎
+  lem : ∀ {a} (R : CommRing a) → ∀ r x0 y0 → 
+    let open CommRingStr (snd R) renaming (_·_ to _·A_)
+    in r ·A (x0 ·A y0) ≡ x0 ·A (r ·A y0)
+  lem A = solve A
 
 ⋆-rassoc : ∀ r x y → r ⋆ (x · y) ≡ x · (r ⋆ y)
-⋆-rassoc = 
-  transport⁻
-    (λ i → (r : ⟨ R ⟩) (x y : Series≡ℕ→R i) →
-      let _⋆ᵢ_ = scalarp (~ i)
-          _·ᵢ_ = mulp (~ i)
-      in r ⋆ᵢ (x ·ᵢ y) ≡ x ·ᵢ (r ⋆ᵢ y)
-    )
-    (λ r x y i n → ⋆-rassoc'-n r x y n i)
+⋆-rassoc r x y =
+  r ⋆ (x · y) 
+    ≡⟨ sym (⟦r⟧·x≡r⋆x r (x · y)) ⟩
+  ⟦ r ⟧ · (x · y)
+    ≡⟨ lem Series-CommRing ⟦ r ⟧ x y ⟩
+  x · (⟦ r ⟧ · y)
+    ≡⟨ cong (x ·_) (⟦r⟧·x≡r⋆x r y) ⟩
+  x · (r ⋆ y)
+    ∎
 
 ⋆-isAlgebra : IsAlgebra (CommRing→Ring R) 0s 1s _+_ _·_ -_ _⋆_
 ⋆-isAlgebra = 
@@ -118,8 +74,11 @@ private
     ; ⋆-rassoc  = ⋆-rassoc 
     }
 
-algebraStr : AlgebraStr (CommRing→Ring R) PowerSeries
-algebraStr = algebrastr 0s 1s _+_ _·_ -_ _⋆_ ⋆-isAlgebra
+⋆-isCommAlgebra : IsCommAlgebra R 0s 1s _+_ _·_ -_ _⋆_
+⋆-isCommAlgebra = iscommalgebra ⋆-isAlgebra ·-comm
 
-R-algebra : Algebra (CommRing→Ring R) _
-R-algebra = (_ , algebraStr)
+commAlgebraStr : CommAlgebraStr R PowerSeries
+commAlgebraStr = commalgebrastr 0s 1s _+_ _·_ -_ _⋆_ ⋆-isCommAlgebra
+
+R-CommAlgebra : CommAlgebra R _
+R-CommAlgebra = (_ , commAlgebraStr)
