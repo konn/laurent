@@ -15,7 +15,8 @@ open import Cubical.Data.Nat
 
 open PowerSeries
 open import Algebra.Ring.FromNat (CommRing→Ring R)
-
+import Algebra.Ring.Linear as Linear
+open import Lemmas.IsoEquiv
 
 open CommRingStr (snd R) renaming 
   ( _·_ to _·R_ ; _+_ to _+R_; -_ to -R_; 1r to 1R; 0r to 0R
@@ -39,75 +40,124 @@ diff' f n = fromNat (suc n) ·R f (suc n)
 infixl 10 _′
 infixr 10 d/dx_
 
+-- * Derivative defined in terms of zipping.
+
+-- | The series corresponding to @n + (1 + n) x + (2 + n) x^2 + ...@
+natsFrom : ℕ → PowerSeries
+head (natsFrom n) = fromNat n
+tail (natsFrom n) = natsFrom (suc n)
+
+-- | 0 + 1 x + 2 x^2 + ... + n x^n + ...
+nats : PowerSeries
+nats = natsFrom 0
+
+open import Algebra.Ring.PowerSeries.Zip R
+
+-- | Formal derivative of formal power series, defined
+-- in terms of zipping with naturals and then taking the tail-part.
+diff : PowerSeries → PowerSeries
+diff f = tail (nats ⊗ f)
+
 _′ d/dx_ : PowerSeries → PowerSeries
-_′ = transport (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) diff'
+_′ = diff
 d/dx_ = _′
-diff = _′
 
-diffp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) diff' _′
-diffp = transport-filler (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) diff'
+natsFrom' : ℕ → ℕ → ⟨ R ⟩
+natsFrom' n m = fromNat m +R fromNat n
 
-diff'-additive-n : ∀ f g n → diff' (f +' g) n ≡ (diff' f +' diff' g) n
-diff'-additive-n f g n =
-  diff' (f +' g) n
+Series⟶∘natsFrom≡natsFrom'
+  : ∀ n m → Series⟶ℕ→R (natsFrom n) m ≡ natsFrom' n m
+Series⟶∘natsFrom≡natsFrom' n 0 = sym (snd (+R-identity (fromNat n)))
+Series⟶∘natsFrom≡natsFrom' n (suc m) =
+  Series⟶ℕ→R (natsFrom n) (suc m) 
     ≡⟨ refl ⟩
-  fromNat (suc n) ·R (f +' g) (suc n)
-    ≡⟨ cong (fromNat (suc n) ·R_) (+'-compwise-n f g (suc n)) ⟩ 
-  fromNat (suc n) ·R (f (suc n) +R g (suc n))
-    ≡⟨ R-·Rdist+ (fromNat (suc n)) (f (suc n)) (g (suc n)) ⟩ 
-  fromNat (suc n) ·R f (suc n)  +R  fromNat (suc n) ·R g (suc n)
-    ≡⟨ refl ⟩
-  diff' f n +R diff' g n
-    ≡⟨ sym ((+'-compwise-n (diff' f) (diff' g) n)) ⟩ 
-  (diff' f +' diff' g) n
+  Series⟶ℕ→R (natsFrom (suc n)) m
+    ≡⟨ Series⟶∘natsFrom≡natsFrom' (suc n) m ⟩
+  natsFrom' (suc n) m
+    ≡⟨ cong (fromNat m +R_) (fromNat-suc n) ⟩
+  fromNat m +R (1R +R fromNat n)
+    ≡⟨(
+      let pf : ∀ (a b : ⟨ R ⟩) → (a +R (1R +R b)) ≡ (1R +R a) +R b
+          pf = solve R
+      in pf (fromNat m) (fromNat n)
+    )⟩
+  (1R +R fromNat m) +R (fromNat n)
+    ≡⟨ cong (_+R fromNat n) (sym (fromNat-suc m)) ⟩
+  natsFrom' n (suc m)
     ∎
 
-diff'-additive : ∀ f g → diff' (f +' g) ≡ diff' f +' diff' g
-diff'-additive f g i n = diff'-additive-n f g n i
-
-diff-additive : ∀  f g → (f + g)′ ≡ f ′ + g ′
-diff-additive =
-  transport 
-    (λ i → (f g : Series≡ℕ→R (~ i)) → 
-      diffp i (addp i f g) 
-        ≡ addp i (diffp i f) (diffp i g)
+natsFromp⁻ : PathP (λ i → ℕ → Series≡ℕ→R i) natsFrom natsFrom'
+natsFromp⁻ = funExt 
+  (λ n →
+  subst (PathP (λ i → Series≡ℕ→R i) (natsFrom n))
+    (
+      transport (λ i → Series≡ℕ→R i) (natsFrom n)
+        ≡[ i ]⟨ transport-isoToPath Series≃ℕ→R i (natsFrom n) ⟩
+      Series⟶ℕ→R (natsFrom n)
+        ≡[ i ]⟨ (λ m → Series⟶∘natsFrom≡natsFrom' n m i) ⟩
+      natsFrom' n
+        ∎
     )
-  diff'-additive
+    (transport-filler (λ i → Series≡ℕ→R i) (natsFrom n))
+  )
 
-private
-  shuffle₁ : ∀ a b c → a ·R (b ·R c) ≡ b ·R (a ·R c)
-  shuffle₁ = solve R
+natsFromp : PathP (λ i → ℕ → Series≡ℕ→R (~ i)) natsFrom' natsFrom
+natsFromp i = natsFromp⁻ (~ i)
 
-diff'-scalar : ∀ c f n → diff' (c ⋆' f) n ≡ (c ⋆' diff' f) n
-diff'-scalar c f n = 
-  diff' (c ⋆' f) n
+natsFrom1 : ∀ n → natsFrom' 1 n ≡ fromNat (suc n)
+natsFrom1 n = +R-comm (fromNat n) 1R ∙ sym (fromNat-suc n)
+
+diff'≡natsFrom1⊗tail-n : ∀ f n → diff' f n ≡ (natsFrom' 1 ⊗' (f ⁺)) n
+diff'≡natsFrom1⊗tail-n f n =
+    diff' f n 
+  ≡⟨ refl ⟩ 
+    fromNat (suc n) ·R f (suc n)
+  ≡⟨ cong (_·R f (suc n)) (sym (natsFrom1 n)) ⟩
+    (natsFrom' 1 ⊗' (f ⁺)) n
+  ∎
+
+diff'≡natsFrom1⊗tail : ∀ f → diff' f ≡ natsFrom' 1 ⊗' (f ⁺)
+diff'≡natsFrom1⊗tail f i n = diff'≡natsFrom1⊗tail-n f n i
+
+diffp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) diff' diff
+diffp = 
+  subst (λ d → PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) d diff)
+    (λ i f → diff'≡natsFrom1⊗tail f (~ i))
+    aux
+  where
+    aux : 
+      PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i))
+        (λ f → natsFrom' 1 ⊗' (f ⁺)) diff
+    aux i f =
+      zipp i (natsFromp i 1) (tailp i f)
+
+
+diff≡[1…]⊗tail : ∀ f → diff f ≡ natsFrom 1 ⊗ tail f
+diff≡[1…]⊗tail f = refl
+
+diff-additive : ∀ f g → diff (f + g) ≡ diff f + diff g
+diff-additive f g =
+  diff (f + g)
     ≡⟨ refl ⟩
-  fromNat (suc n) ·R (c ⋆' f) (suc n)
+  tail (nats ⊗ (f + g))
+    ≡⟨ cong tail (⊗Rdist+ nats f g) ⟩
+  tail (nats ⊗ f + nats ⊗ g)
     ≡⟨ refl ⟩
-  fromNat (suc n) ·R (c ·R f (suc n))
-    ≡⟨ shuffle₁ (fromNat (suc n)) c (f (suc n)) ⟩
-  c ·R (fromNat (suc n) ·R f (suc n))
-    ≡⟨ refl ⟩
-  (c ⋆' diff' f) n
+  diff f + diff g
     ∎
 
-diff-scalar : ∀ c f → (c ⋆ f)′ ≡ c ⋆ f ′
-diff-scalar =
-  transport 
-    (λ i → (c : ⟨ R ⟩) → (f : Series≡ℕ→R (~ i)) → 
-      diffp i (scalarp i c f) 
-        ≡ scalarp i c (diffp i f)
-    )
-    (λ c f i n → diff'-scalar c f n i)
-
-diff-linear : ∀ a f b g → (a ⋆ f  +  b ⋆ g)′ ≡ a ⋆ f ′ + b ⋆ g ′
-diff-linear a f b g =
-  (a ⋆ f  +  b ⋆ g) ′
-    ≡⟨ diff-additive (a ⋆ f) (b ⋆ g) ⟩
-  (a ⋆ f) ′ + (b ⋆ g) ′
-    ≡⟨ cong₂ _+_ (diff-scalar a f) (diff-scalar b g) ⟩
-  a ⋆ f ′ + b ⋆ g ′
+diff-scalar : ∀ r f → diff (r ⋆ f) ≡ r ⋆ diff f
+diff-scalar r f =
+  diff (r ⋆ f) 
+    ≡⟨ refl ⟩
+  natsFrom 1 ⊗ (r ⋆ tail f)
+    ≡⟨ ⊗-⋆-dist (natsFrom 1) r (tail f) ⟩
+  r ⋆ diff f
     ∎
+
+diff-linear : ∀ r x s y → diff (r ⋆ x + s ⋆ y) ≡ r ⋆ diff x + s ⋆ diff y
+diff-linear = linear-helper diff diff-additive diff-scalar
+  where open Linear pow-module pow-module
 
 diff'-0 : ∀ f → diff' f 0 ≡ f 1
 diff'-0 f = snd (·R-identity (f 1))
@@ -376,4 +426,3 @@ leibniz =
         addp i (mulp i f (diffp i g)) (mulp i (diffp i f) g)
     )
     leibniz'
-

@@ -37,7 +37,7 @@ open CommRingStr (snd R) renaming
   ; ·Ldist+ to R-·Ldist+
   )
 
-infixl 8 _⊗_
+infixl 8 _⊗_ _⊗'_
 _⊗_ : PowerSeries → PowerSeries → PowerSeries
 head (f ⊗ g) = head f ·R head g
 tail (f ⊗ g) = tail f ⊗ tail g
@@ -90,3 +90,53 @@ tail (⊗-comm f g i) = ⊗-comm (tail f) (tail g) i
 
 ⊗-CommRing : CommRing _
 ⊗-CommRing = (_ , ⊗-CommRingStr)
+
+⋆-⊗-dist : ∀ r x y → (r ⋆ x) ⊗ y ≡ r ⋆ (x ⊗ y)
+head (⋆-⊗-dist r x y i) = ·R-assoc r (head x) (head y) (~ i)
+tail (⋆-⊗-dist r x y i) = ⋆-⊗-dist r (tail x) (tail y) i
+
+⊗-⋆-dist : ∀ x r y → x ⊗ (r ⋆ y) ≡ r ⋆ (x ⊗ y)
+head (⊗-⋆-dist x r y i) = lem (head x) r (head y) i
+  where
+    lem : ∀ a b c → a ·R (b ·R c) ≡ b ·R (a ·R c)
+    lem = solve R
+tail (⊗-⋆-dist x r y i) = ⊗-⋆-dist (tail x) r (tail y) i
+
+
+_⊗'_ : (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩) → (ℕ → ⟨ R ⟩)
+f ⊗' g = λ n → f n ·R g n
+
+⊗≡⊗'-n : ∀ f g n → ((Series⟶ℕ→R f) ⊗' (Series⟶ℕ→R g)) n ≡ Series⟶ℕ→R (f ⊗ g) n
+⊗≡⊗'-n f g 0 = refl
+⊗≡⊗'-n f g (suc n) = 
+  ((Series⟶ℕ→R f) ⊗' (Series⟶ℕ→R g)) (suc n)
+    ≡⟨ refl ⟩
+  Series⟶ℕ→R (tail f) n ·R Series⟶ℕ→R (tail g) n
+    ≡⟨ refl ⟩
+  (Series⟶ℕ→R (tail f) ⊗' Series⟶ℕ→R (tail g)) n
+    ≡⟨ ⊗≡⊗'-n (tail f) (tail g) n ⟩
+  Series⟶ℕ→R (tail f ⊗ tail g) n
+    ≡⟨ refl ⟩
+  Series⟶ℕ→R (f ⊗ g) (suc n)
+    ∎
+
+⊗≡⊗' : ∀ f g → Series⟶ℕ→R f ⊗' Series⟶ℕ→R g ≡ Series⟶ℕ→R (f ⊗ g)
+⊗≡⊗' f g i n = ⊗≡⊗'-n f g n i
+
+zipp : PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _⊗'_ _⊗_
+zipp =
+  subst 
+    (PathP (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _⊗'_)
+    (funExt (λ f → funExt (λ g →
+      transport 
+        (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i))
+        _⊗'_ f g
+        ≡⟨ liftℕ→ROp₂-unfold _⊗'_ f g ⟩
+      ℕ→R⟶Series (Series⟶ℕ→R f ⊗' Series⟶ℕ→R g)
+        ≡⟨ cong ℕ→R⟶Series (⊗≡⊗' f g) ⟩
+      ℕ→R⟶Series (Series⟶ℕ→R (f ⊗ g))
+        ≡⟨ Ser-Nat-retr (f ⊗ g) ⟩
+      f ⊗ g
+        ∎
+    )))
+    (transport-filler (λ i → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i) → Series≡ℕ→R (~ i)) _⊗'_)

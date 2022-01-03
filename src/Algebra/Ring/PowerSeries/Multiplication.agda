@@ -707,3 +707,39 @@ tail (·-unfold f g i) = ·-tail f g i
         ∷ (head f ⋆ tail g + (tail f · tail g) · X + head g ⋆ tail f)
 head (·-unfold-symmetric f g i) = ·-head f g i
 tail (·-unfold-symmetric f g i) = ·-tail-symmetric f g i
+
+isolate-constant : ∀ f → ⟦ head f ⟧ + tail f · X ≡ f
+isolate-constant = 
+  transport
+    (λ i → (f : Series≡ℕ→R (~ i)) →
+      addp i (⟦ headp i f ⟧p i) (mulp i (tailp i f) (Xp i)) ≡ f
+    )
+    ·'-X'
+
+⟦r⟧·x≡r⋆x : ∀ r x → ⟦ r ⟧ · x ≡ r ⋆ x
+⟦r⟧·x≡r⋆x = 
+  transport
+    (λ i → (r : ⟨ R ⟩) (x : Series≡ℕ→R (~ i)) →
+      mulp i (⟦ r ⟧p i) x ≡ scalarp i r x
+    )
+  ⟦⟧'-·'
+
+f·g≡f₀g+tailf·g·X : ∀ f g → f · g ≡ head f ⋆ g + tail f · g · X
+f·g≡f₀g+tailf·g·X f g =
+  f · g
+    ≡⟨ cong (_· g) (sym (isolate-constant f)) ⟩
+  (⟦ head f ⟧ + tail f · X) · g
+    ≡⟨ distʳ ⟦ head f ⟧ (tail f · X) g ⟩
+  ⟦ head f ⟧ · g + (tail f · X) · g
+    ≡⟨ cong₂ _+_ (⟦r⟧·x≡r⋆x (head f) g)(
+      (tail f · X) · g
+        ≡⟨ sym (·-assoc (tail f) X g ) ⟩
+      tail f · (X · g)
+        ≡⟨ cong (tail f ·_) (·-comm _ _) ⟩
+      tail f · (g · X)
+        ≡⟨ ·-assoc (tail f) g X ⟩
+      (tail f · g) · X
+        ∎
+    )⟩
+  head f ⋆ g + tail f · g · X
+    ∎
