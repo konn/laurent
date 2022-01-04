@@ -250,3 +250,6 @@ module Variables where
 
   Xp : PathP (λ i → Series≡ℕ→R (~ i)) X' X
   Xp i = Xp⁻ (~ i)
+
+_[_] : PowerSeries → ℕ → ⟨ R ⟩
+_[_] = Series⟶ℕ→R

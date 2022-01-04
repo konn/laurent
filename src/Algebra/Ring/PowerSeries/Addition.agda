@@ -4,6 +4,7 @@ module Algebra.Ring.PowerSeries.Addition {ℓ} (R : CommRing ℓ) where
 open import Algebra.Ring.PowerSeries.Base R
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.SIP
 open import Cubical.Algebra.Semigroup
 open import Cubical.Algebra.Monoid
@@ -122,3 +123,28 @@ addp i = transport-filler
 
 +'‿⁺ : ∀ f g → (f +' g) ⁺ ≡ f ⁺ +' g ⁺
 +'‿⁺ f g = refl
+
+index-additive : ∀ f g → Series⟶ℕ→R (f + g) ≡ Series⟶ℕ→R f +' Series⟶ℕ→R g
+index-additive f g = 
+  Series⟶ℕ→R (f + g)
+    ≡[ j ]⟨ Series⟶ℕ→R 
+            (transport⁻Transport 
+                (λ i → Series≡ℕ→R i → Series≡ℕ→R i → Series≡ℕ→R i) _+_ (~ j) f g
+            )
+    ⟩
+  Series⟶ℕ→R (liftℕ→ROp₂ _+'_ f g)
+    ≡⟨ cong Series⟶ℕ→R (liftℕ→ROp₂-unfold _+'_ f g) ⟩
+  Series⟶ℕ→R (ℕ→R⟶Series (Series⟶ℕ→R f +' Series⟶ℕ→R g))
+    ≡⟨ Ser-Nat-sect _ ⟩
+  Series⟶ℕ→R f +' Series⟶ℕ→R g
+    ∎
+
+index-additive-n : ∀ f g n → (f + g) [ n ] ≡ f [ n ] +R g [ n ]
+index-additive-n f g n =
+    (f + g) [ n ]
+  ≡⟨ cong (λ h → h n) (index-additive f g) ⟩
+    (Series⟶ℕ→R f +' Series⟶ℕ→R g) n
+  ≡⟨ +'-compwise-n _ _ n ⟩
+    f [ n ] +R g [ n ]
+  ∎
+  

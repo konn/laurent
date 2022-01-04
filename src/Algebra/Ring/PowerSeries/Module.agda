@@ -177,3 +177,17 @@ tail (⋆1s≡⟦⟧ r i) = ⋆0s≡0s r i
       scalarp (~ i) r (onep (~ i)) ≡ ⟦ r ⟧p (~ i)
     )
     ⋆1s≡⟦⟧
+
+⋆-[] : ∀ r x n → (r ⋆ x) [ n ] ≡ r ·R (x [ n ])
+⋆-[] r x 0 = refl
+⋆-[] r x (suc n) =
+  (r ⋆ x) [ suc n ] 
+    ≡⟨ refl ⟩ 
+  tail (r ⋆ x) [ n ] 
+    ≡⟨ refl ⟩
+  (r ⋆ tail x ) [ n ]
+    ≡⟨ ⋆-[] r (tail x) n ⟩
+  r ·R (tail x [ n ])
+    ≡⟨ refl ⟩ 
+  r ·R (x [ suc n ])
+    ∎

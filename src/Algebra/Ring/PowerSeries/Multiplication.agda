@@ -2,6 +2,7 @@
 open import Cubical.Algebra.CommRing
 module Algebra.Ring.PowerSeries.Multiplication {ℓ} (R : CommRing ℓ) where
 open import Cubical.Algebra.Ring
+open import Cubical.Algebra.Ring.BigOps
 open import Algebra.Ring.PowerSeries.Base R
 open import Algebra.Ring.PowerSeries.Addition R
 open import Cubical.Data.Sigma
@@ -17,8 +18,8 @@ open import Cubical.Algebra.CommRing.Properties
 open import Cubical.Algebra.Ring.Properties
 open import Algebra.Ring.PowerSeries.Module R
 open import Cubical.Data.Nat
-  using ( ℕ ; suc )
-  renaming (_+_ to _+ℕ_; _·_ to _·ℕ_)
+  using ( ℕ ; suc ; ∸-cancelʳ )
+  renaming (_+_ to _+ℕ_; _·_ to _·ℕ_; _∸_ to _-ℕ_)
 open import Lemmas.IsoEquiv
 open PowerSeries
 
@@ -742,4 +743,67 @@ f·g≡f₀g+tailf·g·X f g =
         ∎
     )⟩
   head f ⋆ g + tail f · g · X
+    ∎
+
+open Sum (CommRing→Ring R)
+open import Cubical.Data.FinData
+
+toℕWeakenFin : ∀{n : ℕ} → ∀ (k : Fin n) → toℕ (weakenFin k) ≡ toℕ k
+toℕWeakenFin zero = refl
+toℕWeakenFin (suc k) =
+  toℕ (weakenFin (suc k))
+    ≡⟨ refl ⟩
+  suc (toℕ (weakenFin k))
+    ≡⟨ cong suc (toℕWeakenFin k) ⟩
+  suc (toℕ k)
+    ∎
+
+n∸n≡0 : ∀ n → n -ℕ n ≡ 0
+n∸n≡0 n = ∸-cancelʳ 0 0 n
+
+open import Cubical.Data.Nat.Order
+
+suc∸Fin : ∀ {n} (i : Fin (suc n)) → suc (n -ℕ toℕ i) ≡ suc n -ℕ toℕ i
+suc∸Fin i = ≤-∸-suc i≤n
+  where
+    i<suc-n = toℕ<n i
+    i≤n = pred-≤-pred i<suc-n
+
+-- | Explicit coefficient formula.
+·-explicit : ∀ f g n →  (f · g) [ n ] ≡ ∑ (λ(i : Fin (suc n)) → f [ n -ℕ toℕ i ] ·R g [ toℕ i ])
+·-explicit f g 0 = 
+  (f · g) [ 0 ]
+    ≡⟨ ·-head f g ⟩
+  head f ·R head g
+    ≡⟨ sym (fst (+R-identity (head f ·R head g))) ⟩
+  head f ·R head g +R 0R
+    ∎
+·-explicit f g (suc n) =
+  (f · g) [ suc n ]
+    ≡⟨ refl ⟩
+  (tail (f · g)) [ n ]
+    ≡⟨ cong _[ n ] (·-tail f g) ⟩
+  (f [ 0 ] ⋆ tail g + tail f · g) [ n ]
+    ≡⟨ index-additive-n (f [ 0 ] ⋆ tail g) (tail f · g) n ⟩
+  (f [ 0 ] ⋆ tail g) [ n ] +R (tail f · g) [ n ]
+    ≡⟨ +R-comm ((f [ 0 ] ⋆ tail g) [ n ]) _ ⟩
+  (tail f · g) [ n ] +R (f [ 0 ] ⋆ tail g) [ n ]
+    ≡⟨ cong₂ _+R_ (·-explicit (tail f) g n) (⋆-[] (f [ 0 ]) (tail g) n) ⟩
+  (∑ (λ(i : Fin (suc n)) → f [ suc (n -ℕ toℕ i) ] ·R g [ toℕ i ])) 
+    +R f [ 0 ] ·R (g [ suc n ])
+    ≡⟨ cong₂ _+R_
+        (cong ∑ (funExt (λ (k : Fin (suc n)) → 
+          (cong (λ z → f [ z ] ·R g [ toℕ k ]) (suc∸Fin k) ∙
+            cong (λ z → f [ suc n -ℕ z ] ·R g [ z ])
+            (sym (toℕWeakenFin k))
+          )
+        )))
+        (cong (λ z → f [ z ] ·R g [ suc n ]) (sym (n∸n≡0 (suc n))) 
+          ∙ cong (λ z → f [ suc n -ℕ z ] ·R g [ z ]) (sym (toFromId (suc n)))
+        )
+    ⟩
+  (∑ (λ(i : Fin (suc n)) → f [ suc n -ℕ toℕ (weakenFin i) ] ·R g [ toℕ (weakenFin i) ]))
+    +R (f [ suc n -ℕ toℕ (fromℕ (suc n)) ] ·R g [ toℕ (fromℕ (suc n)) ]) 
+    ≡⟨ sym (∑Last (λ(i : Fin (suc (suc n))) → f [ suc n -ℕ toℕ i ] ·R g [ toℕ i ])) ⟩
+  (∑ (λ(i : Fin (suc (suc n))) → f [ suc n -ℕ toℕ i ] ·R g [ toℕ i ]))
     ∎
