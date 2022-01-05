@@ -1,8 +1,8 @@
 {-# OPTIONS --guardedness --cubical #-}
 open import Cubical.Algebra.CommRing
-module Algebra.Ring.PowerSeries.Module {ℓ} (R : CommRing ℓ) where
-open import Algebra.Ring.PowerSeries.Base R
-open import Algebra.Ring.PowerSeries.Addition R
+module Algebra.CommRing.PowerSeries.Module {ℓ} (R : CommRing ℓ) where
+open import Algebra.CommRing.PowerSeries.Base R
+open import Algebra.CommRing.PowerSeries.Addition R
 open import Lemmas.IsoEquiv
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.Prelude

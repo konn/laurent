@@ -1,10 +1,10 @@
 {-# OPTIONS --guardedness --cubical #-}
 open import Cubical.Algebra.CommRing
 -- | Zip products; i.e. componentwise products.
-module Algebra.Ring.PowerSeries.Zip {ℓ} (R : CommRing ℓ) where
+module Algebra.CommRing.PowerSeries.Zip {ℓ} (R : CommRing ℓ) where
 open import Cubical.Algebra.Ring
-open import Algebra.Ring.PowerSeries.Base R
-open import Algebra.Ring.PowerSeries.Addition R
+open import Algebra.CommRing.PowerSeries.Base R
+open import Algebra.CommRing.PowerSeries.Addition R
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Transport
@@ -16,7 +16,7 @@ open import Cubical.Algebra.RingSolver.ReflectionSolving
 open import Cubical.Algebra.AbGroup
 open import Cubical.Algebra.CommRing.Properties
 open import Cubical.Algebra.Ring.Properties
-open import Algebra.Ring.PowerSeries.Module R
+open import Algebra.CommRing.PowerSeries.Module R
 open import Cubical.Data.Nat
   using ( ℕ ; suc )
   renaming (_+_ to _+ℕ_; _·_ to _·ℕ_)

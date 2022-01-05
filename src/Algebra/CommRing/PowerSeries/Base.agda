@@ -1,6 +1,6 @@
 {-# OPTIONS --guardedness --cubical #-}
 open import Cubical.Algebra.CommRing
-module Algebra.Ring.PowerSeries.Base {ℓ} (R : CommRing ℓ) where
+module Algebra.CommRing.PowerSeries.Base {ℓ} (R : CommRing ℓ) where
 open import Cubical.Data.Sigma
 open import Cubical.Foundations.SIP
 open import Cubical.Algebra.Semigroup

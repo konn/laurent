@@ -1,10 +1,10 @@
 {-# OPTIONS --guardedness --cubical #-}
 open import Cubical.Algebra.CommRing
-module Algebra.Ring.PowerSeries.Differentiation {ℓ} (R : CommRing ℓ) where
-open import Algebra.Ring.PowerSeries.Base R
-open import Algebra.Ring.PowerSeries.Addition R
-open import Algebra.Ring.PowerSeries.Multiplication R
-open import Algebra.Ring.PowerSeries.Module R
+module Algebra.CommRing.PowerSeries.Differentiation {ℓ} (R : CommRing ℓ) where
+open import Algebra.CommRing.PowerSeries.Base R
+open import Algebra.CommRing.PowerSeries.Addition R
+open import Algebra.CommRing.PowerSeries.Multiplication R
+open import Algebra.CommRing.PowerSeries.Module R
 open import Cubical.Data.Sigma
 open import Cubical.Algebra.RingSolver.ReflectionSolving
 open import Cubical.Foundations.Prelude
@@ -51,7 +51,7 @@ tail (natsFrom n) = natsFrom (suc n)
 nats : PowerSeries
 nats = natsFrom 0
 
-open import Algebra.Ring.PowerSeries.Zip R
+open import Algebra.CommRing.PowerSeries.Zip R
 
 -- | Formal derivative of formal power series, defined
 -- in terms of zipping with naturals and then taking the tail-part.
