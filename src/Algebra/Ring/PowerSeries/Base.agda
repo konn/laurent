@@ -253,3 +253,13 @@ module Variables where
 
 _[_] : PowerSeries → ℕ → ⟨ R ⟩
 _[_] = Series⟶ℕ→R
+
+[]p : PathP (λ i → Series≡ℕ→R (~ i) → ℕ → ⟨ R ⟩) (idfun _) _[_]
+[]p = transport⁻-fillerExt (λ i → Series≡ℕ→R (~ i)) 
+  ▷ (
+    transport Series≡ℕ→R 
+      ≡⟨ transport-isoToPath Series≃ℕ→R ⟩
+    Series⟶ℕ→R
+      ∎
+    )
+

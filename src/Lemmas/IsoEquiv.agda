@@ -109,6 +109,13 @@ transportUAop₁-over : ∀ (e : A ≃ B) (f : C → A → A)
 transportUAop₁-over e f x y i =
     transportRefl (equivFun e (f (transportRefl x i) (invEq e (transportRefl y i)))) i
 
+transportUAop₁-overʳ : ∀ (e : A ≃ B) (f : A → C → A) 
+  (x : B) (y : C)
+  → transport (λ i → ua e i → C → ua e i) f x y ≡
+    equivFun e (f (invEq e x) y)
+transportUAop₁-overʳ e f x y i =
+    transportRefl (equivFun e (f (invEq e (transportRefl x i)) (transportRefl y i))) i
+
 transportIsoToPathOp₁-over :
   ∀(σ : Iso A B) {C : Type c} (f : C → A → A) (x : C) (y : B)
   → transport (λ i → C → isoToPath σ i → isoToPath σ i) f x y
@@ -123,6 +130,22 @@ transportIsoToPathOp₁-over σ {C} f c y =
         (λ i →  invEqIsoToEquiv σ i y)
     ⟩
     Iso.fun σ (f c (Iso.inv σ y))
+  ∎
+
+transportIsoToPathOp₁-overʳ :
+  ∀(σ : Iso A B) {C : Type c} (f : A → C → A) (x : B) (y : C)
+  → transport (λ i → isoToPath σ i → C → isoToPath σ i) f x y
+    ≡ Iso.fun σ (f (Iso.inv σ x) y)
+transportIsoToPathOp₁-overʳ σ {C} f x y =
+    transport (λ i → isoToPath σ i → C → isoToPath σ i) f x y
+  ≡⟨ refl ⟩
+    transport (λ i → ua (isoToEquiv σ) i → C → ua (isoToEquiv σ) i) f x y
+  ≡⟨ transportUAop₁-overʳ (isoToEquiv σ) f x y ⟩
+    Iso.fun σ (f (invEq (isoToEquiv σ) x) y)
+  ≡⟨ cong (λ l → Iso.fun σ (f l y)) 
+        (λ i →  invEqIsoToEquiv σ i x)
+    ⟩
+    Iso.fun σ (f (Iso.inv σ x) y)
   ∎
 
 transport⁻IsoToPathOp₂ :

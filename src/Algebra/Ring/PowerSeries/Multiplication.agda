@@ -807,3 +807,16 @@ suc∸Fin i = ≤-∸-suc i≤n
     ≡⟨ sym (∑Last (λ(i : Fin (suc (suc n))) → f [ suc n -ℕ toℕ i ] ·R g [ toℕ i ])) ⟩
   (∑ (λ(i : Fin (suc (suc n))) → f [ suc n -ℕ toℕ i ] ·R g [ toℕ i ]))
     ∎
+
+·'-explicit : ∀ f g n →  (f ·' g) n ≡ 
+  ∑ (λ(i : Fin (suc n)) → f (n -ℕ toℕ i) ·R g (toℕ i))
+·'-explicit =
+  transport
+  (λ i → 
+    (f g : Series≡ℕ→R i) →
+    (n : ℕ) →
+    let _[_]ᵢ = []p (~ i)
+    in mulp (~ i) f g [ n ]ᵢ ≡
+        ∑ (λ(k : Fin (suc n)) → (f [ n -ℕ toℕ k ]ᵢ) ·R (g [ toℕ k ]ᵢ))
+  )
+  ·-explicit
